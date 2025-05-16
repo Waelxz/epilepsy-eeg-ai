@@ -1,17 +1,153 @@
 .sidebar {
     width: 250px;
     min-width: 250px;
-    background-color: #1a237e; /* Darker blue for admin */
+    background: linear-gradient(45deg, #050a24, #0d1442, #1a237e, #0d1442, #050a24);
+    background-size: 400% 400%;
+    animation: gradient 8s ease infinite;
     color: white;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
     height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Ember effects */
+.sidebar::before,
+.sidebar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.sidebar::before {
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(255, 176, 77, 0.2) 0%, transparent 1%),
+        radial-gradient(circle at 80% 30%, rgba(255, 144, 77, 0.15) 0%, transparent 0.8%),
+        radial-gradient(circle at 10% 40%, rgba(255, 213, 77, 0.18) 0%, transparent 1.2%),
+        radial-gradient(circle at 90% 60%, rgba(255, 176, 77, 0.22) 0%, transparent 0.9%),
+        radial-gradient(circle at 30% 70%, rgba(255, 144, 77, 0.15) 0%, transparent 1.1%),
+        radial-gradient(circle at 70% 90%, rgba(255, 213, 77, 0.18) 0%, transparent 0.7%),
+        radial-gradient(circle at 40% 80%, rgba(255, 176, 77, 0.2) 0%, transparent 1%);
+    opacity: 0.7;
+    animation: rising-embers 20s linear infinite;
+}
+
+@keyframes rising-embers {
+    0% {
+        transform: translateY(0) translateX(0);
+    }
+    100% {
+        transform: translateY(-100%) translateX(20%);
+    }
+}
+
+.sidebar::after {
+    background: 
+        radial-gradient(circle at 70% 15%, rgba(255, 176, 77, 0.15) 0%, transparent 0.9%),
+        radial-gradient(circle at 25% 35%, rgba(255, 144, 77, 0.12) 0%, transparent 0.7%),
+        radial-gradient(circle at 90% 45%, rgba(255, 213, 77, 0.2) 0%, transparent 1.1%),
+        radial-gradient(circle at 15% 65%, rgba(255, 176, 77, 0.18) 0%, transparent 0.8%),
+        radial-gradient(circle at 60% 78%, rgba(255, 144, 77, 0.15) 0%, transparent 1%),
+        radial-gradient(circle at 35% 95%, rgba(255, 213, 77, 0.17) 0%, transparent 0.9%),
+        radial-gradient(circle at 85% 82%, rgba(255, 176, 77, 0.13) 0%, transparent 0.8%);
+    opacity: 0.7;
+    animation: drifting-embers 25s linear infinite alternate;
+}
+
+@keyframes drifting-embers {
+    0% {
+        transform: translateY(0) translateX(0);
+    }
+    33% {
+        transform: translateY(-10%) translateX(5%);
+    }
+    66% {
+        transform: translateY(-5%) translateX(-8%);
+    }
+    100% {
+        transform: translateY(-15%) translateX(10%);
+    }
+}
+
+/* Additional ember layers for more depth */
+.sidebar {
+    position: relative;
+}
+
+.sidebar .ember-layer-1,
+.sidebar .ember-layer-2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.sidebar .ember-layer-1 {
+    background: 
+        radial-gradient(circle at 15% 10%, rgba(255, 166, 77, 0.2) 0%, transparent 0.7%),
+        radial-gradient(circle at 85% 25%, rgba(255, 144, 77, 0.18) 0%, transparent 0.6%),
+        radial-gradient(circle at 45% 55%, rgba(255, 213, 77, 0.15) 0%, transparent 0.8%);
+    animation: floating-embers-1 15s ease-in-out infinite;
+}
+
+@keyframes floating-embers-1 {
+    0% {
+        transform: translateY(0) translateX(0) scale(1);
+    }
+    50% {
+        transform: translateY(-30px) translateX(15px) scale(1.1);
+    }
+    100% {
+        transform: translateY(0) translateX(0) scale(1);
+    }
+}
+
+.sidebar .ember-layer-2 {
+    background: 
+        radial-gradient(circle at 65% 5%, rgba(255, 176, 77, 0.15) 0%, transparent 0.5%),
+        radial-gradient(circle at 25% 30%, rgba(255, 144, 77, 0.12) 0%, transparent 0.8%),
+        radial-gradient(circle at 80% 60%, rgba(255, 213, 77, 0.18) 0%, transparent 0.7%);
+    animation: floating-embers-2 18s ease-in-out infinite;
+    animation-delay: 3s;
+}
+
+@keyframes floating-embers-2 {
+    0% {
+        transform: translateY(0) translateX(0) scale(1);
+    }
+    50% {
+        transform: translateY(-20px) translateX(-15px) scale(1.05);
+    }
+    100% {
+        transform: translateY(0) translateX(0) scale(1);
+    }
 }
 
 .logo {
     padding: 20px;
     text-align: center;
     border-bottom: 1px solid #3949ab;
+    position: relative;
+    z-index: 1;
 }
 
 .logo h1 {
@@ -21,6 +157,8 @@
 
 .nav-menu {
     padding: 20px 0;
+    position: relative;
+    z-index: 1;
 }
 
 .nav-item {
@@ -34,11 +172,11 @@
 }
 
 .nav-item:hover {
-    background-color: #3949ab;
+    background-color: rgba(57, 73, 171, 0.7);
 }
 
 .nav-item.active {
-    background-color: #5c6bc0;
+    background-color: rgba(92, 107, 192, 0.7);
 }
 
 .nav-item i {
@@ -46,3 +184,4 @@
     width: 20px;
     text-align: center;
 }
+
