@@ -1,0 +1,36 @@
+<div class="navbar">
+    <div class="breadcrumbs">
+        <span class="breadcrumb-item">Admin Portal</span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item current">{{ getCurrentPage() }}</span>
+    </div>
+
+    <div class="navbar-actions">
+        <div class="user-profile" (click)="toggleDropdown($event)">
+            <div class="user-avatar">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="user-info">
+                <span class="user-name">{{ adminName }}</span>
+                <span class="user-role">Administrator</span>
+            </div>
+            <i class="fas fa-chevron-down dropdown-icon" [class.open]="showDropdown"></i>
+            
+            <div class="dropdown-menu" *ngIf="showDropdown">
+                <div class="dropdown-item" (click)="navigateTo('/admin/profile')">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </div>
+                <div class="dropdown-item" (click)="navigateTo('/admin/settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" (click)="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

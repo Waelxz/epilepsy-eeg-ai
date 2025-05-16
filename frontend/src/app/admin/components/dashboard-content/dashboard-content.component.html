@@ -1,0 +1,167 @@
+<div class="dashboard-content">
+  <div class="welcome-section">
+    <div class="welcome-message">
+      <h2>Welcome back, <span class="admin-name">{{ adminName }}</span></h2>
+      <p *ngIf="lastLogin">Last login: {{ lastLogin | date:'medium' }}</p>
+      <p *ngIf="!lastLogin">First time logging in? Complete your profile for a better experience.</p>
+    </div>
+    <div class="date-time">
+      <div class="current-date">{{ currentDate | date:'EEEE, MMMM d, y' }}</div>
+      <div class="current-time">{{ currentTime }}</div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="action-buttons">
+      <button class="action-button" (click)="navigateTo('/admin/doctors')">
+        <i class="fas fa-user-md"></i>
+        <span>Manage Doctors</span>
+      </button>
+      <button class="action-button" (click)="navigateTo('/admin/technicians')">
+        <i class="fas fa-user-cog"></i>
+        <span>Manage Technicians</span>
+      </button>
+      <button class="action-button" (click)="exportActivityLogs()">
+        <i class="fas fa-file-download"></i>
+        <span>Export Activity Logs</span>
+      </button>
+      <button class="action-button" (click)="systemStatusCheck()">
+        <i class="fas fa-sync-alt"></i>
+        <span>System Status Check</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-overview">
+    <div class="stats-card">
+      <div class="card-icon active-doctors">
+        <i class="fas fa-user-md"></i>
+      </div>
+      <div class="card-content">
+        <h3>Active Doctors</h3>
+        <div class="stats-value">{{ activeDoctorsCount }}</div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="card-icon active-technicians">
+        <i class="fas fa-user-cog"></i>
+      </div>
+      <div class="card-content">
+        <h3>Active Technicians</h3>
+        <div class="stats-value">{{ activeTechniciansCount }}</div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="card-icon total-logs">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div class="card-content">
+        <h3>Total Logs</h3>
+        <div class="stats-value">{{ totalLogsCount }}</div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="card-icon system-status">
+        <i class="fas fa-server"></i>
+      </div>
+      <div class="card-content">
+        <h3>System Status</h3>
+        <div class="status-indicator" [class.online]="systemOnline" [class.offline]="!systemOnline">
+          <span class="status-dot"></span>
+          <span>{{ systemOnline ? 'Online' : 'Maintenance' }}</span>
+        </div>
+        <div class="uptime" *ngIf="systemOnline">Uptime: {{ uptime }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-panels">
+    <div class="dashboard-panel recent-logs">
+      <div class="panel-header">
+        <h3>Recent System Activity</h3>
+        <a routerLink="/admin/logs" class="view-all">View All</a>
+      </div>
+      <div class="panel-content">
+        <div *ngIf="isLoadingLogs" class="loading-indicator">
+          <i class="fas fa-spinner fa-spin"></i> Loading logs...
+        </div>
+        <div *ngIf="!isLoadingLogs && recentLogs.length === 0" class="no-data">
+          No recent activity to display
+        </div>
+        <ul class="activity-list" *ngIf="!isLoadingLogs && recentLogs.length > 0">
+          <li *ngFor="let log of recentLogs" class="activity-item">
+            <div class="activity-icon" [ngClass]="getActionClass(log.action)">
+              <i [class]="getActionIcon(log.action)"></i>
+            </div>
+            <div class="activity-details">
+              <div class="activity-description">
+                <span class="actor">{{ getActorName(log) }}</span>
+                <span class="action-badge" [ngClass]="getActionClass(log.action)">
+                  {{ getActionDisplayName(log.action) }}
+                </span>
+                <span class="description">{{ log.description }}</span>
+              </div>
+              <div class="activity-time">{{ log.timestamp | date:'medium' }}</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="dashboard-panel system-overview">
+      <div class="panel-header">
+        <h3>System Overview</h3>
+      </div>
+      <div class="panel-content">
+        <div class="chart-container">
+          <!-- We'll add chart implementation later -->
+          <div class="placeholder-chart">
+            <svg viewBox="0 0 500 200" preserveAspectRatio="none">
+              <path d="M0,200 L50,180 L100,150 L150,160 L200,140 L250,130 L300,150 L350,120 L400,90 L450,100 L500,70" fill="none" stroke="#3949ab" stroke-width="2"></path>
+              <path d="M0,200 L50,190 L100,180 L150,185 L200,175 L250,165 L300,170 L350,160 L400,150 L450,155 L500,140" fill="none" stroke="#5c6bc0" stroke-width="2"></path>
+            </svg>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <span class="legend-color" style="background-color: #3949ab;"></span>
+                <span>Doctor Activity</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color" style="background-color: #5c6bc0;"></span>
+                <span>Technician Activity</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-panels">
+    <div class="dashboard-panel models-overview">
+      <div class="panel-header">
+        <h3>Classification Models</h3>
+        <a routerLink="/admin/models" class="view-all">Manage Models</a>
+      </div>
+      <div class="panel-content">
+        <div class="models-summary">
+          <div class="model-stat">
+            <div class="model-stat-value">{{ totalModelsCount }}</div>
+            <div class="model-stat-label">Total Models</div>
+          </div>
+          <div class="model-stat">
+            <div class="model-stat-value">1</div>
+            <div class="model-stat-label">Active Model</div>
+          </div>
+          <div class="model-stat">
+            <div class="model-stat-value">92%</div>
+            <div class="model-stat-label">Accuracy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

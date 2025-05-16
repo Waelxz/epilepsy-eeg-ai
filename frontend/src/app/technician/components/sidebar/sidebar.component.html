@@ -1,0 +1,27 @@
+<div class="sidebar">
+    <div class="logo">
+        <h1>Technician Portal</h1>
+    </div>
+    <nav class="nav-menu">
+        <a routerLink="/technician/dashboard" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+        <a routerLink="/technician/doctors" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-user-md"></i>
+            <span>Doctor Management</span>
+        </a>
+        <a routerLink="/technician/logs" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-history"></i>
+            <span>Doctor Logs</span>
+        </a>
+        <a routerLink="/technician/settings" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+        <a (click)="logout()" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </nav>
+</div>

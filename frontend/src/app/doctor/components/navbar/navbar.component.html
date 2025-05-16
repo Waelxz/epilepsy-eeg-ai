@@ -1,0 +1,20 @@
+<div class="navbar-container">
+    <div class="profile-section">
+        <div class="profile-dropdown">
+            <div class="profile-info" (click)="toggleDropdown()">
+                <span class="doctor-name">Dr. John Doe</span>
+                <i class="fas fa-chevron-down" [class.rotate]="isDropdownOpen"></i>
+            </div>
+            <div class="dropdown-menu" [class.show]="isDropdownOpen">
+                <div class="dropdown-item theme-toggle-item" (click)="toggleTheme()">
+                    <i [class]="isDarkMode ? 'fas fa-moon' : 'fas fa-sun'"></i>
+                    <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
+                </div>
+                <a (click)="logout()" class="dropdown-item" style="cursor: pointer;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

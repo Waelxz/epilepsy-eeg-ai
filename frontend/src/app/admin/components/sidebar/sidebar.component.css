@@ -1,0 +1,48 @@
+.sidebar {
+    width: 250px;
+    min-width: 250px;
+    background-color: #1a237e; /* Darker blue for admin */
+    color: white;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    height: 100vh;
+}
+
+.logo {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #3949ab;
+}
+
+.logo h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.nav-menu {
+    padding: 20px 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #e9ecef;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    background-color: #3949ab;
+}
+
+.nav-item.active {
+    background-color: #5c6bc0;
+}
+
+.nav-item i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}

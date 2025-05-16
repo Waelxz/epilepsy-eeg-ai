@@ -1,0 +1,432 @@
+<div class="doctor-management-container">
+  <div class="header">
+    <h2>Doctor Management</h2>
+    <div class="actions">
+      <div class="search-container">
+        <input type="text" placeholder="Search doctors..." #searchInput (input)="searchDoctors(searchInput.value)">
+        <i class="fas fa-search"></i>
+      </div>
+      <button (click)="exportDoctorsList()" class="btn-export">
+        <i class="fas fa-file-export"></i> Export List
+      </button>
+      <button (click)="openCreateModal()" class="btn-create">
+        <i class="fas fa-plus"></i> Add New Doctor
+      </button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="status-filters">
+      <button [class.active]="activeFilter === 'all'" (click)="filterByStatus('all')">All Doctors</button>
+      <button [class.active]="activeFilter === 'active'" (click)="filterByStatus('active')">Active</button>
+      <button [class.active]="activeFilter === 'inactive'" (click)="filterByStatus('inactive')">Inactive</button>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+
+  <div class="doctor-list-container">
+    <div *ngIf="isLoading" class="loading">Loading doctors...</div>
+    
+    <div *ngIf="!isLoading && filteredDoctors.length === 0" class="no-doctors">
+      No doctors found. Try changing your filter or create a new doctor.
+    </div>
+
+    <table *ngIf="!isLoading && filteredDoctors.length > 0" class="doctor-list">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Created By</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let doctor of filteredDoctors" [class.inactive]="!doctor.is_active">
+          <td>{{ doctor.username }}</td>
+          <td>{{ getDoctorFullName(doctor) }}</td>
+          <td>{{ doctor.contact_info.email }}</td>
+          <td>
+            <span class="status-badge" [class.active]="doctor.is_active" [class.inactive]="!doctor.is_active">
+              {{ doctor.is_active ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>
+            <span *ngIf="doctor.created_by">
+              {{ doctor.created_by.name }} {{ doctor.created_by.lastname }}
+            </span>
+            <span *ngIf="!doctor.created_by">System</span>
+          </td>
+          <td class="actions">
+            <button (click)="viewDoctorDetails(doctor)" class="btn btn-view" title="View Details">
+              <i class="fas fa-eye"></i> View
+            </button>
+            <button (click)="openEditModal(doctor)" class="btn btn-edit" title="Edit Doctor">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+            <button (click)="toggleDoctorStatus(doctor)" class="btn" [ngClass]="doctor.is_active ? 'btn-deactivate' : 'btn-activate'" 
+                    [title]="doctor.is_active ? 'Deactivate' : 'Activate'">
+              <i [class]="doctor.is_active ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+              {{ doctor.is_active ? 'Deactivate' : 'Activate' }}
+            </button>
+            <button (click)="confirmDelete(doctor.id)" class="btn btn-delete icon-only" title="Delete Doctor">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- View Doctor Modal -->
+  <div class="modal-overlay" *ngIf="showViewModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Doctor Details</h3>
+        <button (click)="closeViewModal()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="selectedDoctor">
+        <div class="doctor-info">
+          <div class="info-section">
+            <h4>Personal Information</h4>
+            <div class="info-row">
+              <div class="info-label">Username:</div>
+              <div class="info-value">{{ selectedDoctor.username }}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Full Name:</div>
+              <div class="info-value">{{ getDoctorFullName(selectedDoctor) }}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Age:</div>
+              <div class="info-value">{{ selectedDoctor.age }}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Account Status:</div>
+              <div class="info-value">
+                <span class="status-badge" [class.active]="selectedDoctor.is_active" [class.inactive]="!selectedDoctor.is_active">
+                  {{ selectedDoctor.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Created On:</div>
+              <div class="info-value">{{ selectedDoctor.date_created | date:'medium' }}</div>
+            </div>
+            <div class="info-row" *ngIf="selectedDoctor.created_by">
+              <div class="info-label">Created By:</div>
+              <div class="info-value">{{ selectedDoctor.created_by.name }} {{ selectedDoctor.created_by.lastname }}</div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h4>Contact Information</h4>
+            <div class="info-row">
+              <div class="info-label">Email:</div>
+              <div class="info-value">{{ selectedDoctor.contact_info.email }}</div>
+            </div>
+            <div class="info-row" *ngIf="selectedDoctor.contact_info.phone">
+              <div class="info-label">Phone:</div>
+              <div class="info-value">{{ selectedDoctor.contact_info.phone }}</div>
+            </div>
+            <div class="info-row" *ngIf="selectedDoctor.contact_info.address">
+              <div class="info-label">Address:</div>
+              <div class="info-value">{{ selectedDoctor.contact_info.address }}</div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h4>Permissions</h4>
+            <div class="permissions-view">
+              <div class="permission-group-view" *ngFor="let group of permissionGroups">
+                <div class="permission-name">
+                  <span class="permission-status" [class.granted]="hasDoctorPermissionGroup(selectedDoctor, group.id)">
+                    <i [class]="getPermissionIconClass(selectedDoctor, group.id)"></i>
+                  </span>
+                  <strong>{{ group.label }}</strong>
+                </div>
+                <div class="permission-description">{{ group.description }}</div>
+              </div>
+              <div class="no-permissions" *ngIf="selectedDoctor.permission_groups.length === 0">
+                This doctor has no permissions assigned.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeViewModal()" class="btn btn-secondary">Close</button>
+        <button (click)="openEditModal(selectedDoctor!)" class="btn btn-primary">Edit Doctor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Doctor Modal -->
+  <div class="modal-overlay" *ngIf="showEditModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Edit Doctor</h3>
+        <button (click)="closeEditModal()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="selectedDoctor">
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+          <div *ngIf="errorMessage.includes('permissions')" class="error-action">
+            <button type="button" class="btn btn-sm btn-outline-light" (click)="saveDoctorChanges()">
+              <i class="fas fa-sync"></i> Save Changes Without Permissions
+            </button>
+          </div>
+        </div>
+        <div *ngIf="successMessage" class="success-message">
+          {{ successMessage }}
+        </div>
+        <form #doctorForm="ngForm" (ngSubmit)="saveDoctorChanges()">
+          <div class="form-section">
+            <h4>Login Information</h4>
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" id="username" [value]="selectedDoctor.username" name="username" readonly disabled class="readonly-field">
+            </div>
+            <div class="password-toggle">
+              <button type="button" (click)="togglePasswordField()" class="btn-toggle-permission">
+                <i [class]="showPasswordField ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                <span>{{ showPasswordField ? 'Cancel Password Change' : 'Change Password' }}</span>
+              </button>
+            </div>
+            
+            <div class="password-section" *ngIf="showPasswordField">
+              <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <div class="password-input-group">
+                  <input [type]="showPassword ? 'text' : 'password'" id="newPassword" [(ngModel)]="newPassword" name="newPassword" required>
+                  <button type="button" class="password-toggle-btn" (click)="togglePasswordVisibility()">
+                    <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="button" (click)="updatePassword()" class="btn btn-primary">Update Password</button>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4>Personal & Contact Information</h4>
+            <div class="form-row">
+              <div class="form-column">
+                <div class="form-group">
+                  <label for="name">First Name</label>
+                  <input type="text" id="name" [(ngModel)]="editFormData.name" name="name" required #nameInput="ngModel">
+                  <div *ngIf="nameInput.invalid && (nameInput.dirty || nameInput.touched)" class="error-message form-error">
+                    First name is required
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="lastname">Last Name</label>
+                  <input type="text" id="lastname" [(ngModel)]="editFormData.lastname" name="lastname" required #lastnameInput="ngModel">
+                  <div *ngIf="lastnameInput.invalid && (lastnameInput.dirty || lastnameInput.touched)" class="error-message form-error">
+                    Last name is required
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="age">Age</label>
+                  <input type="number" id="age" [(ngModel)]="editFormData.age" name="age" required min="18" max="100" #ageInput="ngModel">
+                  <div *ngIf="ageInput.invalid && (ageInput.dirty || ageInput.touched)" class="error-message form-error">
+                    Age must be between 18 and 100
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-column">
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input type="email" id="email" [(ngModel)]="editFormData.email" name="email" required email #emailInput="ngModel">
+                  <div *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)" class="error-message form-error">
+                    Please enter a valid email address
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="phone">Phone</label>
+                  <input type="tel" id="phone" [(ngModel)]="editFormData.phone" name="phone">
+                </div>
+                <div class="form-group">
+                  <label for="address">Address</label>
+                  <textarea id="address" [(ngModel)]="editFormData.address" name="address" rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4>Permissions</h4>
+            <div class="permissions-group">
+              <p class="permissions-hint">Select permission groups to grant doctor access to different features:</p>
+              
+              <div class="permission-group-item" *ngFor="let group of permissionGroups">
+                <div class="permission-toggle">
+                  <button type="button" class="btn-toggle-permission" 
+                        [class.active]="hasPermissionGroup(group.id)"
+                        (click)="togglePermissionGroup(group.id)">
+                    <i [class]="hasPermissionGroup(group.id) ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                    <span>{{ hasPermissionGroup(group.id) ? 'Enabled' : 'Disabled' }}</span>
+                  </button>
+                  <div class="permission-info">
+                    <strong>{{ group.label }}</strong>
+                    <span class="permission-description">{{ group.description }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        
+          <div class="modal-footer">
+            <button type="button" (click)="closeEditModal()" class="btn btn-secondary">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="doctorForm.invalid">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteConfirm">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>Confirm Deletion</h3>
+        <button (click)="closeDeleteConfirm()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this doctor account? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeDeleteConfirm()" class="btn btn-secondary">Cancel</button>
+        <button (click)="deleteDoctor()" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Create Doctor Modal -->
+  <div class="modal-overlay" *ngIf="showCreateModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add New Doctor</h3>
+        <button (click)="closeCreateModal()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="success-message">
+          {{ successMessage }}
+        </div>
+        <div class="doctor-form-container">
+          <div class="form-section">
+            <h4>Login Information</h4>
+            <div class="form-group">
+              <label for="newUsername">Username</label>
+              <input type="text" id="newUsername" [(ngModel)]="newDoctorData.username" name="username" required #usernameInput="ngModel">
+              <div *ngIf="usernameInput.invalid && (usernameInput.dirty || usernameInput.touched)" class="error-message form-error">
+                Username is required
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="newPassword">Password</label>
+              <div class="password-input-group">
+                <input [type]="showNewDoctorPassword ? 'text' : 'password'" id="newPassword" [(ngModel)]="newDoctorData.password" 
+                       name="password" required #passwordInput="ngModel">
+                <button type="button" class="password-toggle-btn" (click)="toggleNewDoctorPasswordVisibility()">
+                  <i [class]="showNewDoctorPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+              <div *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)" class="error-message form-error">
+                Password is required
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4>Personal & Contact Information</h4>
+            <div class="form-row">
+              <div class="form-column">
+                <div class="form-group">
+                  <label for="newName">First Name</label>
+                  <input type="text" id="newName" [(ngModel)]="newDoctorData.name" name="name" required #nameInput="ngModel">
+                  <div *ngIf="nameInput.invalid && (nameInput.dirty || nameInput.touched)" class="error-message form-error">
+                    First name is required
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="newLastname">Last Name</label>
+                  <input type="text" id="newLastname" [(ngModel)]="newDoctorData.lastname" name="lastname" required #lastnameInput="ngModel">
+                  <div *ngIf="lastnameInput.invalid && (lastnameInput.dirty || lastnameInput.touched)" class="error-message form-error">
+                    Last name is required
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="newAge">Age</label>
+                  <input type="number" id="newAge" [(ngModel)]="newDoctorData.age" name="age" required min="18" max="100" #ageInput="ngModel">
+                  <div *ngIf="ageInput.invalid && (ageInput.dirty || ageInput.touched)" class="error-message form-error">
+                    Age must be between 18 and 100
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-column">
+                <div class="form-group">
+                  <label for="newEmail">Email</label>
+                  <input type="email" id="newEmail" [(ngModel)]="newDoctorData.email" name="email" required email #emailInput="ngModel">
+                  <div *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)" class="error-message form-error">
+                    Please enter a valid email address
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="newPhone">Phone</label>
+                  <input type="tel" id="newPhone" [(ngModel)]="newDoctorData.phone" name="phone">
+                </div>
+                <div class="form-group">
+                  <label for="newAddress">Address</label>
+                  <textarea id="newAddress" [(ngModel)]="newDoctorData.address" name="address" rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4>Permissions</h4>
+            <div class="permissions-group">
+              <p class="permissions-hint">Select permission groups to grant doctor access to different features:</p>
+              
+              <div class="permission-group-item" *ngFor="let group of permissionGroups">
+                <div class="permission-toggle">
+                  <button type="button" class="btn-toggle-permission" 
+                        [class.active]="newDoctorData.permission_groups.includes(group.id)"
+                        (click)="toggleNewDoctorPermissionGroup(group.id)">
+                    <i [class]="newDoctorData.permission_groups.includes(group.id) ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                    <span>{{ newDoctorData.permission_groups.includes(group.id) ? 'Enabled' : 'Disabled' }}</span>
+                  </button>
+                  <div class="permission-info">
+                    <strong>{{ group.label }}</strong>
+                    <span class="permission-description">{{ group.description }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        
+          <div class="modal-footer">
+            <button type="button" (click)="closeCreateModal()" class="btn btn-secondary">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="createDoctor()">Create Doctor</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

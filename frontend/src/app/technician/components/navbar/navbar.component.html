@@ -1,0 +1,36 @@
+<div class="navbar">
+    <div class="breadcrumbs">
+        <span class="breadcrumb-item">Technician Portal</span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item current">{{ getCurrentPage() }}</span>
+    </div>
+
+    <div class="navbar-actions">
+        <div class="user-profile" (click)="toggleDropdown($event)">
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="user-info">
+                <span class="user-name">{{ technicianName }}</span>
+                <span class="user-role">Technician</span>
+            </div>
+            <i class="fas fa-chevron-down dropdown-icon" [class.open]="showDropdown"></i>
+            
+            <div class="dropdown-menu" *ngIf="showDropdown">
+                <div class="dropdown-item" (click)="navigateTo('/technician/profile')">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </div>
+                <div class="dropdown-item" (click)="navigateTo('/technician/settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" (click)="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

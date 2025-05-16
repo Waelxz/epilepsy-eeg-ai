@@ -1,0 +1,396 @@
+<div class="technician-management-container">
+    <div class="page-header">    <h1>Technician Management</h1>    <div class="header-actions">      <div class="search-container">        <input           type="text"           placeholder="Search technicians..."           [(ngModel)]="searchQuery"           (input)="searchTechnicians(searchQuery)"        >        <i class="fas fa-search"></i>      </div>    <button class="btn btn-primary" (click)="openCreateModal()">        <i class="fas fa-user-plus"></i> Add New Technician      </button>       <button class="btn btn-outline" (click)="exportTechniciansList()">        <i class="fas fa-file-export"></i> Export List      </button>     </div>  </div>  <!-- Messages -->  <div class="alert alert-success" *ngIf="successMessage">    <i class="fas fa-check-circle"></i> {{ successMessage }}  </div>  <div class="alert alert-danger" *ngIf="errorMessage">    <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}  </div>  <!-- Filters -->  <div class="filters-container">    <div class="status-filters">      <button class="filter-btn" [class.active]="activeFilter === 'all'" (click)="filterByStatus('all')">All</button>      <button class="filter-btn" [class.active]="activeFilter === 'active'" (click)="filterByStatus('active')">Active</button>      <button class="filter-btn" [class.active]="activeFilter === 'inactive'" (click)="filterByStatus('inactive')">Inactive</button>    </div>  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Loading technicians...</p>
+  </div>
+
+  <!-- No Technicians State -->
+  <div class="empty-state" *ngIf="!isLoading && filteredTechnicians.length === 0">
+    <i class="fas fa-user-cog"></i>
+    <h3>No technicians found</h3>
+    <p *ngIf="searchQuery">Try adjusting your search or filters</p>
+    <p *ngIf="!searchQuery">Add a new technician to get started</p>
+    <button class="btn btn-primary" (click)="openCreateModal()">Add Technician</button>
+  </div>
+
+  <!-- Technicians Table -->
+  <div class="table-container" *ngIf="!isLoading && filteredTechnicians.length > 0">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Permissions</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let technician of filteredTechnicians">
+          <td class="name-cell">{{ technician.name }} {{ technician.lastname }}</td>
+          <td>{{ technician.username }}</td>
+          <td>{{ technician.contact_info.email }}</td>
+                              <td class="permissions-cell">            <div class="permission-icons">              <span class="permission-icon" *ngFor="let group of permissionGroups"                     [class.granted]="hasTechnicianPermissionGroup(technician, group.id)"                     [class.denied]="!hasTechnicianPermissionGroup(technician, group.id)"                    [title]="group.label + ': ' + group.description">                <i [class]="hasTechnicianPermissionGroup(technician, group.id) ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>                <small>{{ group.label.charAt(0) }}</small>              </span>            </div>          </td>
+          <td>
+            <span class="status-badge" [class.active]="technician.is_active" [class.inactive]="!technician.is_active">
+              {{ technician.is_active ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>{{ technician.date_created | date:'mediumDate' }}</td>
+                    <td class="actions-cell">            <div class="action-buttons">              <button class="btn-action view-btn" (click)="viewTechnicianDetails(technician)" title="View Details">                <i class="fas fa-eye"></i>              </button>              <button class="btn-action edit-btn" (click)="openEditModal(technician)" title="Edit">                <i class="fas fa-edit"></i>                <span>Edit</span>              </button>              <button class="btn-action status-btn"                       [class.activate-btn]="!technician.is_active"                      [class.deactivate-btn]="technician.is_active"                      (click)="toggleTechnicianStatus(technician)"                       [title]="technician.is_active ? 'Deactivate' : 'Activate'">                <i class="fas" [class.fa-toggle-on]="technician.is_active" [class.fa-toggle-off]="!technician.is_active"></i>                <span>{{ technician.is_active ? 'Deactivate' : 'Activate' }}</span>              </button>              <button class="btn-action delete-btn" (click)="confirmDelete(technician.id)" title="Delete">                <i class="fas fa-trash"></i>              </button>            </div>          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- View Technician Modal -->
+  <div class="modal" *ngIf="showViewModal">
+    <div class="modal-backdrop" (click)="closeViewModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Technician Details</h2>
+        <button class="close-btn" (click)="closeViewModal()">&times;</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedTechnician">
+        <div class="technician-profile">
+          <div class="technician-avatar">
+            <i class="fas fa-user-cog"></i>
+          </div>
+          <div class="technician-info">
+            <h3>{{ selectedTechnician.name }} {{ selectedTechnician.lastname }}</h3>
+            <p class="technician-username">{{ '@' + selectedTechnician.username }}</p>
+            <p class="technician-status" [class.active]="selectedTechnician.is_active" [class.inactive]="!selectedTechnician.is_active">
+              {{ selectedTechnician.is_active ? 'Active' : 'Inactive' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h4>Contact Information</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Email:</span>
+              <span class="info-value">{{ selectedTechnician.contact_info.email }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedTechnician.contact_info.phone">
+              <span class="info-label">Phone:</span>
+              <span class="info-value">{{ selectedTechnician.contact_info.phone }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedTechnician.contact_info.address">
+              <span class="info-label">Address:</span>
+              <span class="info-value">{{ selectedTechnician.contact_info.address }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Age:</span>
+              <span class="info-value">{{ selectedTechnician.age }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h4>Permissions</h4>
+          <div class="permissions-list">
+            <div class="permission-group" *ngFor="let group of permissionGroups">
+              <div class="permission-group-header" [class.active]="hasTechnicianPermissionGroup(selectedTechnician, group.id)">
+                <i [class]="getPermissionIconClass(selectedTechnician, group.id)"></i>
+                <span class="permission-group-name">{{ group.label }}</span>
+              </div>
+              <p class="permission-group-desc">{{ group.description }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h4>System Information</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Account Created:</span>
+              <span class="info-value">{{ selectedTechnician.date_created | date:'medium' }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedTechnician.created_by">
+              <span class="info-label">Created By:</span>
+              <span class="info-value">{{ selectedTechnician.created_by.name }} {{ selectedTechnician.created_by.lastname }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">ID:</span>
+              <span class="info-value">{{ selectedTechnician.id }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeViewModal()">Close</button>
+        <button class="btn btn-primary" (click)="openEditModal(selectedTechnician!)">Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Technician Modal -->
+  <div class="modal" *ngIf="showCreateModal">
+    <div class="modal-backdrop" (click)="closeCreateModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2><i class="fas fa-user-plus"></i> Add New Technician</h2>
+        <button class="close-btn" (click)="closeCreateModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Alert Messages -->
+        <div class="alert alert-danger" *ngIf="errorMessage">
+          <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+        </div>
+        <div class="alert alert-success" *ngIf="successMessage">
+          <i class="fas fa-check-circle"></i> {{ successMessage }}
+        </div>
+        
+        <!-- Login Information Section -->
+        <div class="form-section">
+          <h4 class="section-title"><i class="fas fa-lock"></i> Login Information</h4>
+          <div class="form-section-content">
+            <div class="form-group">
+              <label for="newUsername">Username <span class="required">*</span></label>
+              <input type="text" id="newUsername" [(ngModel)]="newTechnicianData.username" class="form-control" required>
+            </div>
+            
+            <div class="form-group password-group">
+              <label for="newPassword">Password <span class="required">*</span></label>
+              <div class="password-input-container">
+                <input [type]="showNewTechnicianPassword ? 'text' : 'password'" id="newPassword" [(ngModel)]="newTechnicianData.password" class="form-control" required>
+                <button type="button" class="password-toggle" (click)="toggleNewTechnicianPasswordVisibility()">
+                  <i class="fas" [class.fa-eye]="!showNewTechnicianPassword" [class.fa-eye-slash]="showNewTechnicianPassword"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Personal Information Section -->
+        <div class="form-section">
+          <h4 class="section-title"><i class="fas fa-user"></i> Personal Information</h4>
+          <div class="form-section-content">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="newName">First Name <span class="required">*</span></label>
+                <input type="text" id="newName" [(ngModel)]="newTechnicianData.name" class="form-control" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="newLastname">Last Name <span class="required">*</span></label>
+                <input type="text" id="newLastname" [(ngModel)]="newTechnicianData.lastname" class="form-control" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="newAge">Age</label>
+                <input type="number" id="newAge" [(ngModel)]="newTechnicianData.age" class="form-control" min="18" max="100">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contact Information Section -->
+        <div class="form-section">
+          <h4 class="section-title"><i class="fas fa-address-card"></i> Contact Information</h4>
+          <div class="form-section-content">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="newEmail">Email <span class="required">*</span></label>
+                <input type="email" id="newEmail" [(ngModel)]="newTechnicianData.email" class="form-control" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="newPhone">Phone</label>
+                <input type="tel" id="newPhone" [(ngModel)]="newTechnicianData.phone" class="form-control">
+              </div>
+              
+              <div class="form-group full-width">
+                <label for="newAddress">Address</label>
+                <input type="text" id="newAddress" [(ngModel)]="newTechnicianData.address" class="form-control">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Permissions Section -->
+        <div class="form-section">
+          <h4 class="section-title"><i class="fas fa-shield-alt"></i> Permissions</h4>
+          <p class="form-hint">Select the permission groups this technician should have</p>
+          
+                    <div class="permissions-group">            <div class="permission-group-item" *ngFor="let group of permissionGroups">              <div class="permission-toggle">                <button type="button" class="btn-toggle-permission"                       [class.active]="newTechnicianData.permission_groups.includes(group.id)"                      (click)="toggleNewTechnicianPermissionGroup(group.id)">                  <i [class]="newTechnicianData.permission_groups.includes(group.id) ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>                  <span>{{ newTechnicianData.permission_groups.includes(group.id) ? 'Enabled' : 'Disabled' }}</span>                </button>                <div class="permission-info">                  <strong>{{ group.label }}</strong>                  <span class="permission-description">{{ group.description }}</span>                </div>                <div class="toggle-status-icon" [ngClass]="newTechnicianData.permission_groups.includes(group.id) ? 'active' : 'inactive'">                  <i [class]="newTechnicianData.permission_groups.includes(group.id) ? 'fas fa-lock-open' : 'fas fa-lock'"></i>                </div>              </div>            </div>          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeCreateModal()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-primary" (click)="createTechnician()" 
+                [disabled]="!newTechnicianData.username || !newTechnicianData.password || !newTechnicianData.name || !newTechnicianData.lastname || !newTechnicianData.email">
+          <i class="fas fa-save"></i> Create Technician
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Technician Modal -->
+  <div class="modal" *ngIf="showEditModal">
+    <div class="modal-backdrop" (click)="closeEditModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2><i class="fas fa-edit"></i> Edit Technician</h2>
+        <button class="close-btn" (click)="closeEditModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedTechnician">
+        <!-- Alert Messages -->
+        <div class="alert alert-danger" *ngIf="errorMessage">
+          <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+        </div>
+        <div class="alert alert-success" *ngIf="successMessage">
+          <i class="fas fa-check-circle"></i> {{ successMessage }}
+        </div>
+        
+        <!-- Account Status Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <h4 class="section-title"><i class="fas fa-user-check"></i> Account Status</h4>
+            <div class="toggle-switch-container">
+              <div class="toggle-status-icon inactive" [class.hidden]="editFormData.is_active">
+                <i class="fas fa-user-slash"></i>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="statusToggle" [(ngModel)]="editFormData.is_active">
+                <label for="statusToggle"></label>
+              </div>
+              <span class="status-text" [ngClass]="editFormData.is_active ? 'active' : 'inactive'">
+                {{ editFormData.is_active ? 'Active' : 'Inactive' }}
+              </span>
+              <div class="toggle-status-icon active" [class.hidden]="!editFormData.is_active">
+                <i class="fas fa-user-check"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Personal Information Section -->
+        <div class="form-section">
+          <h4 class="section-title"><i class="fas fa-user"></i> Personal Information</h4>
+          <div class="form-section-content">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="editName">First Name <span class="required">*</span></label>
+                <input type="text" id="editName" [(ngModel)]="editFormData.name" class="form-control" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="editLastname">Last Name <span class="required">*</span></label>
+                <input type="text" id="editLastname" [(ngModel)]="editFormData.lastname" class="form-control" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="editAge">Age</label>
+                <input type="number" id="editAge" [(ngModel)]="editFormData.age" class="form-control" min="18" max="100">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contact Information Section -->
+        <div class="form-section">
+          <h4 class="section-title"><i class="fas fa-address-card"></i> Contact Information</h4>
+          <div class="form-section-content">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="editEmail">Email <span class="required">*</span></label>
+                <input type="email" id="editEmail" [(ngModel)]="editFormData.email" class="form-control" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="editPhone">Phone</label>
+                <input type="tel" id="editPhone" [(ngModel)]="editFormData.phone" class="form-control">
+              </div>
+              
+              <div class="form-group full-width">
+                <label for="editAddress">Address</label>
+                <input type="text" id="editAddress" [(ngModel)]="editFormData.address" class="form-control">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Password Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <h4 class="section-title"><i class="fas fa-key"></i> Password</h4>
+            <button class="btn btn-sm btn-outline" (click)="togglePasswordField()" *ngIf="!showPasswordField">
+              <i class="fas fa-key"></i> Change Password
+            </button>
+          </div>
+          
+          <div class="password-change-form" *ngIf="showPasswordField">
+            <div class="form-group password-group">
+              <label for="newPassword">New Password</label>
+              <div class="password-input-container">
+                <input [type]="showPassword ? 'text' : 'password'" id="newPassword" [(ngModel)]="newPassword" class="form-control">
+                <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+                  <i class="fas" [class.fa-eye]="!showPassword" [class.fa-eye-slash]="showPassword"></i>
+                </button>
+              </div>
+            </div>
+            <div class="password-actions">
+              <button class="btn btn-sm btn-secondary" (click)="togglePasswordField()">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+              <button class="btn btn-sm btn-primary" (click)="updatePassword()" [disabled]="!newPassword">
+                <i class="fas fa-save"></i> Update Password
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Permissions Section -->
+        <div class="form-section">
+          <h4 class="section-title"><i class="fas fa-shield-alt"></i> Permissions</h4>
+          <p class="form-hint">Select the permission groups this technician should have</p>
+          
+                    <div class="permissions-group">            <div class="permission-group-item" *ngFor="let group of permissionGroups">              <div class="permission-toggle">                <button type="button" class="btn-toggle-permission"                       [class.active]="hasPermissionGroup(group.id)"                      (click)="togglePermissionGroup(group.id)">                  <i [class]="hasPermissionGroup(group.id) ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>                  <span>{{ hasPermissionGroup(group.id) ? 'Enabled' : 'Disabled' }}</span>                </button>                <div class="permission-info">                  <strong>{{ group.label }}</strong>                  <span class="permission-description">{{ group.description }}</span>                </div>                <div class="toggle-status-icon" [ngClass]="hasPermissionGroup(group.id) ? 'active' : 'inactive'">                  <i [class]="hasPermissionGroup(group.id) ? 'fas fa-lock-open' : 'fas fa-lock'"></i>                </div>              </div>            </div>          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeEditModal()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-primary" (click)="saveTechnicianChanges()" 
+                [disabled]="!editFormData.name || !editFormData.lastname || !editFormData.email">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal" *ngIf="showDeleteConfirm">
+    <div class="modal-backdrop" (click)="closeDeleteConfirm()"></div>
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h2>
+        <button class="close-btn" (click)="closeDeleteConfirm()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="delete-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Are you sure you want to delete this technician? This action cannot be undone.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteConfirm()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-danger" (click)="deleteTechnician()">
+          <i class="fas fa-trash"></i> Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

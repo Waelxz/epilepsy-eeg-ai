@@ -1,1 +1,36 @@
-/* You can add global styles to this file, and also import other style files */
+/* Apply Plus Jakarta Sans as the general font */
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Optionally, set font weights for headings and other elements */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700; /* Bold */
+}
+
+p, a, span, div {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400; /* Regular */
+}
+
+button {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 500; /* Medium */
+}
+
+/* Dark theme styles */
+body.dark-theme {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+/* Light theme styles */
+body {
+    background-color: #ffffff;
+    color: #111827;
+}

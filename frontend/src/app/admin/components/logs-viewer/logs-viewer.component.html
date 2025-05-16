@@ -1,0 +1,312 @@
+<div class="logs-viewer-container">
+  <div class="page-header">
+    <h1>System Logs</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="exportLogs()">
+        <i class="fas fa-file-export"></i> Export Logs
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <!-- Filters -->
+  <div class="filters-panel">
+    <h3>Filters</h3>
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label for="startDate">Start Date</label>
+        <input type="date" id="startDate" [(ngModel)]="startDate" class="form-control">
+      </div>
+      
+      <div class="filter-group">
+        <label for="endDate">End Date</label>
+        <input type="date" id="endDate" [(ngModel)]="endDate" class="form-control">
+      </div>
+      
+      <div class="filter-group">
+        <label for="actionType">Action Type</label>
+        <select id="actionType" [(ngModel)]="actionType" class="form-control">
+          <option *ngFor="let group of actionGroups" [value]="group.name">
+            {{ group.displayName }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="userRole">User Role</label>
+        <select id="userRole" [(ngModel)]="userRole" class="form-control">
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="doctor">Doctor</option>
+          <option value="technician">Technician</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="doctorSelect">Doctor</label>
+        <select id="doctorSelect" [(ngModel)]="selectedDoctor" class="form-control">
+          <option value="">All Doctors</option>
+          <option *ngFor="let doctor of doctors" [value]="doctor.id">
+            {{ doctor.name }} {{ doctor.lastname }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="technicianSelect">Technician</label>
+        <select id="technicianSelect" [(ngModel)]="selectedTechnician" class="form-control">
+          <option value="">All Technicians</option>
+          <option *ngFor="let technician of technicians" [value]="technician.id">
+            {{ technician.name }} {{ technician.lastname }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="filter-group search-group">
+        <label for="searchQuery">Search</label>
+        <div class="search-container">
+          <input 
+            type="text" 
+            id="searchQuery"
+            placeholder="Search logs..." 
+            [(ngModel)]="searchQuery" 
+            class="form-control"
+          >
+          <i class="fas fa-search search-icon"></i>
+        </div>
+      </div>
+    </div>
+    
+    <div class="filter-actions">
+      <button class="btn btn-primary" (click)="applyFilters()">
+        <i class="fas fa-filter"></i> Apply Filters
+      </button>
+      <button class="btn btn-secondary" (click)="resetFilters()">
+        <i class="fas fa-undo"></i> Reset
+      </button>
+      
+      <div class="toggle-container">
+        <label class="toggle-switch">
+          <input type="checkbox" [(ngModel)]="hideCurrentUserLogs" (change)="applyFilters()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">
+          <i class="fas fa-user-shield"></i> Hide all my activity
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Loading logs...</p>
+  </div>
+
+  <!-- No Logs State -->
+  <div class="empty-state" *ngIf="!isLoading && logs.length === 0">
+    <i class="fas fa-clipboard-list"></i>
+    <h3>No logs found</h3>
+    <p>Try adjusting your filters to see more results</p>
+  </div>
+
+  <!-- Logs Table -->
+  <div class="logs-table-container" *ngIf="!isLoading && logs.length > 0">
+    <table class="logs-table">
+      <thead>
+        <tr>
+          <th>Date/Time</th>
+          <th>Action</th>
+          <th>Performed By</th>
+          <th>Role</th>
+          <th>Target</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of logs">
+          <td class="date-time-cell">
+            <div class="date">{{ formatDate(log.timestamp) }}</div>
+            <div class="time">{{ formatTime(log.timestamp) }}</div>
+          </td>
+          <td>
+            <span class="action-badge" [ngClass]="getActionClass(log.action, log)">
+              <i [class]="getActionIcon(log.action)"></i>
+              {{ getActionDisplayName(log.action) }}
+            </span>
+          </td>
+          <td>{{ getActorName(log) }}</td>
+          <td>
+            <span class="role-badge" [class]="getActorRole(log).toLowerCase() || 'loading'">
+              {{ getActorRole(log) || 'Loading...' }}
+            </span>
+          </td>
+          <td>{{ getTargetName(log) }}</td>
+          <td>{{ getShortDescription(log) }}</td>
+          <td class="actions">
+            <button (click)="viewLogDetails(log)" class="btn-view" title="View Details">
+              <i class="fas fa-eye"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!isLoading && totalPages > 0">
+    <div class="pagination-info">
+      Showing {{ (currentPage - 1) * logsPerPage + 1 }} - 
+      {{ currentPage * logsPerPage > totalLogs ? totalLogs : currentPage * logsPerPage }} 
+      of {{ totalLogs }} logs
+    </div>
+    
+    <div class="pagination-controls">
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage === 1" 
+        (click)="previousPage()"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      
+      <ng-container *ngFor="let page of getPageNumbers(); let i = index">
+        <span class="pagination-ellipsis" *ngIf="i === 0 && shouldShowEllipsis(getPageNumbers())[0]">...</span>
+        
+        <button 
+          class="pagination-btn" 
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+        
+        <span class="pagination-ellipsis" *ngIf="i === getPageNumbers().length - 2 && shouldShowEllipsis(getPageNumbers())[1]">...</span>
+      </ng-container>
+      
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage === totalPages" 
+        (click)="nextPage()"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Log Details Modal -->
+  <div class="modal-overlay" *ngIf="showLogDetails">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Details</h3>
+        <button 
+          type="button" 
+          (click)="closeLogDetails()" 
+          class="modal-close-btn" 
+          aria-label="Close"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="selectedLog">
+        <div class="detail-section">
+          <h4>Basic Information</h4>
+          <div class="log-detail-row">
+            <div class="detail-label">Date & Time:</div>
+            <div class="detail-value">{{ formatDate(selectedLog.timestamp) }} {{ formatTime(selectedLog.timestamp) }}</div>
+          </div>
+          <div class="log-detail-row">
+            <div class="detail-label">Action:</div>
+            <div class="detail-value">
+              <span class="action-badge" [ngClass]="getActionClass(selectedLog.action, selectedLog)">
+                <i [class]="getActionIcon(selectedLog.action)"></i>
+                {{ getActionDisplayName(selectedLog.action) }}
+              </span>
+            </div>
+          </div>
+          <div class="log-detail-row">
+            <div class="detail-label">Performed By:</div>
+            <div class="detail-value">{{ getActorName(selectedLog) }}</div>
+          </div>
+          <div class="log-detail-row">
+            <div class="detail-label">Role:</div>
+            <div class="detail-value">
+              <span class="role-badge" [class]="getActorRole(selectedLog).toLowerCase() || 'loading'">
+                {{ getActorRole(selectedLog) || 'Unknown' }}
+              </span>
+            </div>
+          </div>
+          <div class="log-detail-row">
+            <div class="detail-label">Target Account:</div>
+            <div class="detail-value">{{ getTargetName(selectedLog) }}</div>
+          </div>
+          <div class="log-detail-row">
+            <div class="detail-label">Description:</div>
+            <div class="detail-value">{{ selectedLog.description }}</div>
+          </div>
+        </div>
+        
+        <!-- Display extra details when available and not a simple auth action -->
+        <ng-container *ngIf="selectedLog.details && hasDetails(selectedLog) && !isSimpleAuthAction(selectedLog)">
+          <div class="detail-section">
+            <h4>Action Details</h4>
+            
+            <!-- For user updates -->
+            <div class="log-detail-row" *ngIf="selectedLog.details.updated_fields">
+              <div class="detail-label">Updated Fields:</div>
+              <div class="detail-value">
+                <ul>
+                  <li *ngFor="let field of selectedLog.details.updated_fields">{{ formatFieldName(field) }}</li>
+                </ul>
+              </div>
+            </div>
+            
+            <!-- For permission updates -->
+            <div class="log-detail-row" *ngIf="selectedLog.details.old_permission_groups">
+              <div class="detail-label">Previous Permissions:</div>
+              <div class="detail-value permission-value">
+                <span *ngIf="selectedLog.details.old_permission_groups.length === 0">No permissions</span>
+                <ul *ngIf="selectedLog.details.old_permission_groups.length > 0" class="permissions-list">
+                  <li *ngFor="let perm of selectedLog.details.old_permission_groups" class="permission-item">
+                    <i class="fas fa-check-circle"></i> {{ formatPermissionName(perm) }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="log-detail-row" *ngIf="selectedLog.details.new_permission_groups">
+              <div class="detail-label">New Permissions:</div>
+              <div class="detail-value permission-value">
+                <span *ngIf="selectedLog.details.new_permission_groups.length === 0">No permissions</span>
+                <ul *ngIf="selectedLog.details.new_permission_groups.length > 0" class="permissions-list">
+                  <li *ngFor="let perm of selectedLog.details.new_permission_groups" class="permission-item">
+                    <i class="fas fa-check-circle"></i> {{ formatPermissionName(perm) }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <!-- For field values -->
+            <div class="log-detail-row" *ngIf="selectedLog.details.old_values">
+              <div class="detail-label">Previous Values:</div>
+              <div class="detail-value value-block">
+                <pre>{{ formatValues(selectedLog.details.old_values) }}</pre>
+              </div>
+            </div>
+            <div class="log-detail-row" *ngIf="selectedLog.details.new_values">
+              <div class="detail-label">New Values:</div>
+              <div class="detail-value value-block">
+                <pre>{{ formatValues(selectedLog.details.new_values) }}</pre>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeLogDetails()" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

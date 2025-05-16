@@ -1,10 +1,92 @@
-<h2>Login</h2>
-<form (ngSubmit)="login()">
-  <label for="username">Username:</label>
-  <input type="text" id="username" [(ngModel)]="username" name="username" required>
-  <br>
-  <label for="password">Password:</label>
-  <input type="password" id="password" [(ngModel)]="password" name="password" required>
-  <br>
-  <button type="submit">Login</button>
-</form>
+<div class="login-page animate__animated animate__fadeIn">
+  <!-- Left Side: Purple Section -->
+  <div class="left-side">
+    <div class="app-title animate__animated animate__slideInDown">Epilepsy App</div>
+    <h1 class="animate__animated animate__fadeIn animate__delay-1s">Welcome back!</h1>
+    <p class="animate__animated animate__fadeIn animate__delay-1s">You can sign in to access with your existing account.</p>
+    <div class="floating-shapes"></div>
+  </div>
+
+  <!-- Right Side: Login Form -->
+  <div class="login-container">
+    <h2 class="animate__animated animate__fadeIn animate__delay-1s">Sign In</h2>
+    <form (ngSubmit)="login()" class="animate__animated animate__fadeIn animate__delay-1s">
+      <div *ngIf="errorMessage" class="error-message animate__animated animate__shakeX">
+        <i class="error-icon">!</i>
+        {{ errorMessage }}
+      </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="username"
+            [(ngModel)]="username"
+            name="username"
+            required
+            (focus)="onFieldFocus('username')"
+            (input)="onFieldInput()"
+            [ngClass]="{
+              'input-error': errorMessage && errorMessage.includes('Account'),
+              'input-success': isInputSuccess
+            }"
+            placeholder="Enter your username"
+          >
+          <span *ngIf="isInputSuccess" class="input-icon success-icon animate__animated animate__bounceIn">✓</span>
+          <span *ngIf="errorMessage && errorMessage.includes('Account')" class="input-icon error-icon animate__animated animate__bounceIn">✕</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <input
+            type="password"
+            id="password"
+            [(ngModel)]="password"
+            name="password"
+            required
+            (focus)="onFieldFocus('password')"
+            (input)="onFieldInput()"
+            [ngClass]="{
+              'input-error': errorMessage && (errorMessage.includes('Password') || errorMessage.includes('Account')),
+              'input-success': isInputSuccess
+            }"
+            placeholder="Enter your password"
+          >
+          <span *ngIf="isInputSuccess" class="input-icon success-icon animate__animated animate__bounceIn">✓</span>
+          <span *ngIf="errorMessage && (errorMessage.includes('Password') || errorMessage.includes('Account'))" class="input-icon error-icon animate__animated animate__bounceIn">✕</span>
+        </div>
+      </div>
+      <button type="submit" [disabled]="isLoading" class="btn-login">
+        <span *ngIf="!isLoading">Sign In</span>
+        <span *ngIf="isLoading" class="loader-text">
+          <span class="dot-loader"></span>
+          <span class="dot-loader"></span>
+          <span class="dot-loader"></span>
+        </span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Popup -->
+  <div *ngIf="showPopup" class="popup animate__animated animate__fadeIn">
+    <div class="popup-content" [ngClass]="{'expand': isSuccess}">
+      <div *ngIf="!isSuccess" [ngClass]="{'animate__animated animate__fadeOut': isFadingOut}" class="popup-inner">
+        <div class="loader"></div>
+        <div class="popup-text">Signing in...</div>
+      </div>
+      <div *ngIf="isSuccess" class="animate__animated animate__fadeIn popup-inner">
+        <div class="success-checkmark">
+          <div class="check-icon">
+            <span class="icon-line line-tip"></span>
+            <span class="icon-line line-long"></span>
+            <div class="icon-circle"></div>
+            <div class="icon-fix"></div>
+          </div>
+        </div>
+        <div class="popup-text success-text">Login Successful</div>
+        <div class="popup-redirect">Redirecting you shortly...</div>
+      </div>
+    </div>
+  </div>
+</div>

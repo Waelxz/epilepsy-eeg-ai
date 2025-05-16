@@ -1,0 +1,35 @@
+<div class="sidebar">
+    <div class="logo">
+        <h1>Admin Portal</h1>
+    </div>
+    <nav class="nav-menu">
+        <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+        <a routerLink="/admin/doctors" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-user-md"></i>
+            <span>Doctor Management</span>
+        </a>
+        <a routerLink="/admin/technicians" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-user-cog"></i>
+            <span>Technician Management</span>
+        </a>
+        <a routerLink="/admin/logs" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-history"></i>
+            <span>System Logs</span>
+        </a>
+        <a routerLink="/admin/models" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-brain"></i>
+            <span>Classification Models</span>
+        </a>
+        <a routerLink="/admin/settings" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+        <a (click)="logout()" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </nav>
+</div>

@@ -1,0 +1,772 @@
+.doctor-management-container {
+  padding: 80px ;
+  width: 100%;
+  flex-grow: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+  min-width: 500px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.header h2 {
+  margin: 0;
+  color: #343a40;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.search-container {
+  position: relative;
+  margin-right: 10px;
+}
+
+.search-container input {
+  padding: 10px 10px 10px 35px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 250px;
+}
+
+.search-container i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+.btn-create {
+  background-color: #fd7e14;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-create:hover {
+  background-color: #e5700c;
+}
+
+.filters {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.status-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-filters button {
+  background: none;
+  border: 1px solid #ced4da;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #343a40;
+}
+
+.status-filters button.active {
+  background-color: #343a40;
+  color: white;
+  border-color: #343a40;
+}
+
+.doctor-list-container {
+  background-color: white;
+  border-radius: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.doctor-list {
+  width: 100%;
+  min-width: 800px; /* Minimum width to prevent table from becoming too narrow */
+  border-collapse: collapse;
+}
+
+.doctor-list th, .doctor-list td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.doctor-list th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.doctor-list tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.doctor-list tr.inactive {
+  background-color: #f8f9fa;
+  opacity: 0.7;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: #e1f5e1;
+  color: #28a745;
+}
+
+.status-badge.inactive {
+  background-color: #f8d7da;
+  color: #dc3545;
+}
+
+.actions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn i {
+  font-size: 14px;
+}
+
+.btn-view {
+  background-color: #e9ecef;
+  color: #343a40;
+}
+
+.btn-view:hover {
+  background-color: #dfe3e7;
+}
+
+.btn-edit {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #0069d9;
+}
+
+.btn-activate {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-activate:hover {
+  background-color: #218838;
+}
+
+.btn-deactivate {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-deactivate:hover {
+  background-color: #c82333;
+}
+
+.btn-delete {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-primary {
+  background-color: #fd7e14;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #e5700c;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.icon-only {
+  width: 34px;
+  justify-content: center;
+  padding: 8px;
+}
+
+.loading, .no-doctors {
+  padding: 30px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.error-message {
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.error-options {
+  margin-top: 10px;
+  padding-left: 20px;
+  font-size: 0.9em;
+}
+
+.error-options li {
+  margin-bottom: 5px;
+}
+
+.error-action {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.error-action button {
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background-color: transparent;
+  color: #fff;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.error-action button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.error-action button i {
+  font-size: 10px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  width: 850px;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modal-fade-in 0.3s ease-out;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-sm {
+  width: 400px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #343a40;
+  font-weight: 600;
+  font-size: 1.3rem;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  padding: 18px 24px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Form Styling */
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-section h4 {
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 12px;
+  margin-top: 0;
+  color: #343a40;
+  font-size: 1.1rem;
+}
+
+/* Two columns layout for forms */
+.doctor-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Horizontal layout for personal info and contact info */
+.form-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.form-column {
+  flex: 1;
+  min-width: 250px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #343a40;
+  font-size: 0.95rem;
+}
+
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%;
+  max-width: 350px;
+  padding: 15px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+  border-color: #fd7e14;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.25);
+}
+
+.toggle-switch {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-switch input[type="checkbox"] {
+  width: auto;
+  margin-right: 10px;
+}
+
+/* Doctor Info Styling */
+.doctor-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.info-section {
+  flex: 1;
+  min-width: 250px;
+  margin-bottom: 15px;
+}
+
+.info-section h4 {
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 10px;
+  margin-top: 0;
+  color: #343a40;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.info-label {
+  font-weight: 600;
+  width: 140px;
+  color: #343a40;
+}
+
+.info-value {
+  flex: 1;
+}
+
+/* Permissions Styling */
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.permission-status {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-right: 10px;
+  color: white;
+}
+
+.permission-status.granted {
+  background-color: #28a745;
+}
+
+.permission-status:not(.granted) {
+  background-color: #dc3545;
+}
+
+.permission-checkbox {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.permission-checkbox input {
+  margin-right: 8px;
+}
+
+.no-permissions {
+  grid-column: 1 / -1;
+  padding: 15px;
+  text-align: center;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+/* Permission Group Styles */
+.permissions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.permissions-hint {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.permission-group-item {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: background-color 0.2s;
+}
+
+.permission-group-item:hover {
+  background-color: #f0f0f0;
+}
+
+.permission-radio {
+  display: flex;
+  align-items: flex-start;
+}
+
+.permission-radio input[type="checkbox"] {
+  margin-top: 5px;
+  margin-right: 10px;
+}
+
+.permission-radio label {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.permission-description {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* Permission View Styles */
+.permissions-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.permission-group-view {
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 10px 15px;
+}
+
+.permission-name {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.permission-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 10px;
+  background-color: #f0f0f0;
+  color: #ff4d4f;
+}
+
+.permission-status.granted {
+  background-color: #e6f7e6;
+  color: #52c41a;
+}
+
+.no-permissions {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 10px;
+}
+
+/* Permission Toggle Styles */
+.permission-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.btn-toggle-permission {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 20px;
+  background-color: #f5f5f5;
+  color: #777;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  font-size: 0.9rem;
+}
+
+.btn-toggle-permission i {
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-toggle-permission.active {
+  background-color: #e6f7e6;
+  color: #52c41a;
+}
+
+.btn-toggle-permission:not(.active):hover {
+  background-color: #eaeaea;
+}
+
+.btn-toggle-permission.active:hover {
+  background-color: #d6f0d6;
+}
+
+.btn-toggle-permission i.fa-toggle-on {
+  transform: scale(1.2);
+  color: #52c41a;
+}
+
+.btn-toggle-permission i.fa-toggle-off {
+  color: #999;
+}
+
+.permission-info {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Add styles for the password section */
+.password-section {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e1e1e1;
+}
+
+.password-input-group {
+  position: relative;
+  width: 100%;
+  max-width: 325px;
+}
+
+.password-input-group input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  
+  background: none;
+  border: none;
+  padding: 5px ;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.password-toggle-btn:hover {
+  color: #fd7e14;
+}
+
+.password-toggle {
+  margin: 10px 0;
+}
+
+/* Success message */
+.success-message {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.readonly-field {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
+/* Add styles for the converted form to div structure */
+.doctor-form-container .form-section {
+  margin-bottom: 20px;
+}
+
+.doctor-form-container .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-export {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.btn-export:hover {
+  background-color: #138496;
+}
+
+.btn-export i {
+  margin-right: 8px;
+}

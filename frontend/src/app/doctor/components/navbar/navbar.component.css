@@ -1,0 +1,147 @@
+.navbar-container {
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.theme-toggle {
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background-color: #e5e7eb;
+    color: #8b5cf6;
+}
+
+.profile-dropdown {
+    position: relative;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.profile-info:hover {
+    background-color: #f3f4f6;
+}
+
+.doctor-name {
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.fa-chevron-down {
+    transition: transform 0.3s ease;
+}
+
+.fa-chevron-down.rotate {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    min-width: 180px;
+    display: none;
+    z-index: 1000;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.dropdown-menu.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    color: #4b5563;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f3f4f6;
+    color: #8b5cf6;
+}
+
+.dropdown-item i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.theme-toggle-item {
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 4px;
+    padding-bottom: 12px;
+}
+
+/* Dark theme styles */
+:host-context(.dark-theme) {
+    .navbar-container {
+        background-color: #1f2937;
+    }
+
+    .profile-info {
+        color: #f3f4f6;
+    }
+
+    .profile-info:hover {
+        background-color: #374151;
+    }
+
+    .doctor-name {
+        color: #f3f4f6;
+    }
+
+    .dropdown-menu {
+        background-color: #1f2937;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .dropdown-item {
+        color: #f3f4f6;
+    }
+
+    .dropdown-item:hover {
+        background-color: #374151;
+        color: #a78bfa;
+    }
+
+    .theme-toggle-item {
+        border-bottom-color: #374151;
+    }
+}

@@ -1,0 +1,147 @@
+<div class="dashboard-content">
+  <div class="welcome-section">
+    <div class="welcome-message">
+      <h2>Welcome back, <span class="technician-name">{{ technicianName }}</span></h2>
+      <p *ngIf="lastLogin">Last login: {{ lastLogin | date:'medium' }}</p>
+      <p *ngIf="!lastLogin">First time logging in? Complete your profile for a better experience.</p>
+    </div>
+    <div class="date-time">
+      <div class="current-date">{{ currentDate | date:'EEEE, MMMM d, y' }}</div>
+      <div class="current-time">{{ currentTime }}</div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="action-buttons">
+      <button class="action-button" (click)="navigateTo('/technician/doctors')">
+        <i class="fas fa-user-plus"></i>
+        <span>Add New Doctor</span>
+      </button>
+      <button class="action-button" (click)="exportDoctorsList()">
+        <i class="fas fa-file-export"></i>
+        <span>Export Doctors List</span>
+      </button>
+      <button class="action-button" (click)="exportActivityLogs()">
+        <i class="fas fa-file-download"></i>
+        <span>Export Activity Logs</span>
+      </button>
+      <button class="action-button" (click)="systemStatusCheck()">
+        <i class="fas fa-sync-alt"></i>
+        <span>System Status Check</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-overview">
+    <div class="stats-card">
+      <div class="card-icon active-doctors">
+        <i class="fas fa-user-md"></i>
+      </div>
+      <div class="card-content">
+        <h3>Active Doctors</h3>
+        <div class="stats-value">{{ activeDoctorsCount }}</div>
+        <div class="stats-trend" [class.positive]="doctorsTrend > 0" [class.negative]="doctorsTrend < 0" *ngIf="doctorsTrend !== 0">
+          <i [class]="doctorsTrend > 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+          <span>{{ Math.abs(doctorsTrend) }} since last month</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="card-icon inactive-doctors">
+        <i class="fas fa-user-slash"></i>
+      </div>
+      <div class="card-content">
+        <h3>Inactive Doctors</h3>
+        <div class="stats-value">{{ inactiveDoctorsCount }}</div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="card-icon total-logs">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div class="card-content">
+        <h3>Total Logs</h3>
+        <div class="stats-value">{{ totalLogsCount }}</div>
+        <div class="stats-period">Last 30 days</div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="card-icon system-status">
+        <i class="fas fa-server"></i>
+      </div>
+      <div class="card-content">
+        <h3>System Status</h3>
+        <div class="status-indicator" [class.online]="systemOnline" [class.offline]="!systemOnline">
+          <span class="status-dot"></span>
+          <span>{{ systemOnline ? 'Online' : 'Maintenance' }}</span>
+        </div>
+        <div class="uptime" *ngIf="systemOnline">Uptime: {{ uptime }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-panels">
+    <div class="dashboard-panel recent-logs">
+      <div class="panel-header">
+        <h3>Recent Doctor Activity</h3>
+        <a routerLink="/technician/logs" class="view-all">View All</a>
+      </div>
+      <div class="panel-content">
+        <div *ngIf="isLoadingLogs" class="loading-indicator">
+          <i class="fas fa-spinner fa-spin"></i> Loading logs...
+        </div>
+        <div *ngIf="!isLoadingLogs && recentLogs.length === 0" class="no-data">
+          No recent activity to display
+        </div>
+        <ul class="activity-list" *ngIf="!isLoadingLogs && recentLogs.length > 0">
+          <li *ngFor="let log of recentLogs" class="activity-item">
+            <div class="activity-icon" [ngClass]="getActionClass(log.action)">
+              <i [class]="getActionIcon(log.action)"></i>
+            </div>
+            <div class="activity-details">
+              <div class="activity-description">
+                <span class="actor">{{ getActorName(log) }}</span>
+                <span class="action-badge" [ngClass]="getActionClass(log.action)">
+                  {{ getActionDisplayName(log.action) }}
+                </span>
+                <span class="description">{{ log.description }}</span>
+              </div>
+              <div class="activity-time">{{ log.timestamp | date:'medium' }}</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="dashboard-panel doctor-activity">
+      <div class="panel-header">
+        <h3>Doctor Activity Overview</h3>
+      </div>
+      <div class="panel-content">
+        <div class="chart-container">
+          <!-- We'll add chart implementation later -->
+          <div class="placeholder-chart">
+            <svg viewBox="0 0 500 200" preserveAspectRatio="none">
+              <path d="M0,200 L50,180 L100,150 L150,160 L200,140 L250,130 L300,150 L350,120 L400,90 L450,100 L500,70" fill="none" stroke="#4CAF50" stroke-width="2"></path>
+              <path d="M0,200 L50,190 L100,180 L150,185 L200,175 L250,165 L300,170 L350,160 L400,150 L450,155 L500,140" fill="none" stroke="#2196F3" stroke-width="2"></path>
+            </svg>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <span class="legend-color" style="background-color: #4CAF50;"></span>
+                <span>Login Activity</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color" style="background-color: #2196F3;"></span>
+                <span>Patient Records</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
