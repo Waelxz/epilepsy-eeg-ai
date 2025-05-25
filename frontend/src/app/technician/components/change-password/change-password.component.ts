@@ -8,7 +8,7 @@ import { AppSettingsService } from '../../../shared/services/app-settings.servic
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-change-password',
+  selector: 'app-technician-change-password',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './change-password.component.html',

@@ -1,0 +1,319 @@
+<div class="patient-list-container">
+    <div class="header">
+        <div class="title">
+            <h1>Patients</h1>
+            <p>Manage your patient records</p>
+        </div>
+    </div>
+
+    <div class="filters-row">
+        <div class="left-filters">
+            <a (click)="openCreatePatientModal()" class="btn-create">
+                <i class="fas fa-plus"></i>
+                Add New Patient
+            </a>
+            
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    [(ngModel)]="searchQuery" 
+                    (keyup.enter)="searchPatients()" 
+                    placeholder="Search by name, ID or email"
+                >
+                <button class="btn-search" (click)="searchPatients()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            <button class="btn-advanced-search" (click)="toggleAdvancedSearch()">
+                <i class="fas" [ngClass]="showAdvancedSearch ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                Advanced Search
+            </button>
+        </div>
+
+        <div class="sort-filter">
+            <button class="btn-clear-filters" (click)="clearFilters()">
+                <i class="fas fa-times"></i> Clear Filters
+            </button>
+            <div class="select-container">
+                <select [(ngModel)]="sortOption" (change)="applySortFilter()">
+                    <option value="recent">Most Recent</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="id-asc">ID (A-Z)</option>
+                    <option value="id-desc">ID (Z-A)</option>
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                </select>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Advanced Search Panel -->
+    <div class="advanced-search-panel" *ngIf="showAdvancedSearch">
+        <div class="advanced-search-content">
+            <div class="search-row">
+                <div class="search-group">
+                    <label>Age Range</label>
+                    <div class="range-inputs">
+                        <input 
+                            type="number" 
+                            placeholder="Min" 
+                            [(ngModel)]="ageRangeMin"
+                            min="0"
+                            max="120"
+                        >
+                        <span>to</span>
+                        <input 
+                            type="number" 
+                            placeholder="Max" 
+                            [(ngModel)]="ageRangeMax"
+                            min="0"
+                            max="120"
+                        >
+                        <span>years</span>
+                    </div>
+                </div>
+                
+                <div class="search-group">
+                    <label>Gender</label>
+                    <select [(ngModel)]="selectedGender">
+                        <option value="">Any</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="search-row">
+                <div class="search-group date-range-group">
+                    <label>Record Creation Date</label>
+                    <div class="date-range-container">
+                        <select [(ngModel)]="selectedDateRange" (change)="onDateRangeChange()">
+                            <option *ngFor="let preset of dateRangePresets" [value]="preset.value">
+                                {{ preset.label }}
+                            </option>
+                        </select>
+                        
+                        <div class="custom-date-range" *ngIf="selectedDateRange === 'custom'">
+                            <div class="date-input">
+                                <label>From</label>
+                                <input type="date" [(ngModel)]="dateRangeStart">
+                            </div>
+                            <div class="date-input">
+                                <label>To</label>
+                                <input type="date" [(ngModel)]="dateRangeEnd">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="search-actions">
+                <button class="btn-secondary" (click)="clearAdvancedFilters()">
+                    Reset Filters
+                </button>
+                <button class="btn-primary" (click)="applyAdvancedFilters()">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-filters">
+        <span 
+            class="filter-option" 
+            [class.active]="statusFilter === 'all'"
+            (click)="filterByStatus('all')"
+        >All</span>
+        <span 
+            class="filter-option" 
+            [class.active]="statusFilter === 'abnormal-results'"
+            (click)="filterByStatus('abnormal-results')"
+        >Abnormal</span>
+        <span 
+        class="filter-option" 
+        [class.active]="statusFilter === 'normal-results'"
+        (click)="filterByStatus('normal-results')"
+    >Normal</span>
+        <span 
+            class="filter-option" 
+            [class.active]="statusFilter === 'no-analysis'"
+            (click)="filterByStatus('no-analysis')"
+        >Not Analyzed</span>
+        <span 
+            class="filter-option" 
+            [class.active]="statusFilter === 'pending-analysis'"
+            (click)="filterByStatus('pending-analysis')"
+        >Pending</span>
+    </div>
+
+    <!-- Content area that will be scrollable -->
+    <div class="content-area">
+    <!-- Loading spinner -->
+    <div class="loading-spinner" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <span>Loading patients...</span>
+    </div>
+
+    <!-- Error message -->
+    <div class="error-message" *ngIf="errorMessage && !isLoading">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ errorMessage }}
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="filteredPatients.length === 0 && !isLoading && !errorMessage">
+        <div class="empty-state-icon">
+            <i class="fas fa-users-slash"></i>
+        </div>
+        <h3>No patients found</h3>
+        <p>Try adjusting your search or filters, or add a new patient</p>
+        <a (click)="openCreatePatientModal()" class="btn-create">
+            <i class="fas fa-plus"></i>
+            Add New Patient
+        </a>
+    </div>
+
+    <!-- Patient list table -->
+    <div class="table-container" *ngIf="filteredPatients.length > 0 && !isLoading">
+        <table class="patient-table">
+            <thead>
+                <tr>
+                    <th class="checkbox-column">
+                        <div class="checkbox-wrapper">
+                            <input 
+                                type="checkbox" 
+                                [checked]="allSelected" 
+                                (change)="toggleAllPatients()"
+                                id="select-all"
+                            >
+                            <label for="select-all" class="checkbox-label"></label>
+                        </div>
+                    </th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Contact</th>
+                    <th>Analysis Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let patient of displayedPatients" [class.selected]="isPatientSelected(patient)">
+                    <td class="checkbox-column">
+                        <div class="checkbox-wrapper">
+                            <input 
+                                type="checkbox" 
+                                [checked]="isPatientSelected(patient)" 
+                                (change)="togglePatientSelection(patient)"
+                                [id]="'select-' + patient.id"
+                            >
+                            <label [for]="'select-' + patient.id" class="checkbox-label"></label>
+                        </div>
+                    </td>
+                    <td class="patient-id">{{ patient.patientId }}</td>
+                    <td class="patient-name">{{ getPatientFullName(patient) }}</td>
+                    <td>{{ calculateAge(patient.dateOfBirth) }} yrs</td>
+                    <td>{{ patient.gender }}</td>
+                    <td>
+                        <div class="contact-info">
+                            <span>{{ patient.contactInfo?.email }}</span>
+                            <span>{{ patient.contactInfo?.phone }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="analysis-status" [ngClass]="getAnalysisStatusClass(patient)">
+                            {{ getAnalysisStatusLabel(patient) }}
+                        </span>
+                        <div class="analysis-info" *ngIf="patient.analysisStatus?.hasAnalysis">
+                            {{ patient.analysisStatus?.totalAnalysisCount }} analyses
+                        </div>
+                    </td>
+                    <td class="actions">
+                        <a [routerLink]="['/doctor/patients', patient.id]" class="btn-action view">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a (click)="openAnalysisOverlay(patient.id)" class="btn-action analyze">
+                            <i class="fas fa-plus"></i>
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions-bar" *ngIf="showBulkActions">
+        <div class="bulk-selection-info">
+            <span class="selection-count">{{ selectedCount }}</span>
+            <span class="selection-text">{{ selectedCount === 1 ? 'patient' : 'patients' }} selected</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="bulk-action-btn" (click)="bulkGenerateReports()">
+                <i class="fas fa-file-pdf"></i> Generate Reports
+            </button>
+            <button class="bulk-action-btn" (click)="bulkExportData()">
+                <i class="fas fa-file-export"></i> Export Data
+            </button>
+            <button class="bulk-action-btn delete" (click)="bulkDeletePatients()">
+                <i class="fas fa-trash-alt"></i> Delete
+            </button>
+        </div>
+        <div class="bulk-close">
+            <button (click)="clearSelection()" class="bulk-close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="filteredPatients.length > 0 && !isLoading">
+        <button 
+            class="btn-page" 
+            [disabled]="currentPage === 1" 
+            (click)="prevPage()"
+        >
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <div class="page-numbers">
+            <span *ngFor="let page of getPages()" 
+                class="page-number" 
+                [class.active]="currentPage === page"
+                (click)="goToPage(page)"
+            >{{ page }}</span>
+        </div>
+        
+        <button 
+            class="btn-page" 
+            [disabled]="currentPage === totalPages" 
+            (click)="nextPage()"
+        >
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        
+        <div class="page-info">
+            Showing {{ (currentPage - 1) * pageSize + 1 }} - 
+            {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} patients
+        </div>
+    </div>
+
+    <!-- Patient Create Modal -->
+    <app-patient-create 
+        *ngIf="showCreatePatientModal"
+        (closeOverlay)="closeCreatePatientModal()"
+        (patientCreated)="onPatientCreated($event)">
+    </app-patient-create>
+
+    <!-- Analysis Overlay -->
+    <app-analysis-overlay
+        *ngIf="showAnalysisOverlay"
+        [patientId]="selectedPatientId"
+        (closeOverlay)="closeAnalysisOverlay()"
+        (analysisCreated)="onAnalysisCreated($event)">
+    </app-analysis-overlay>
+</div>

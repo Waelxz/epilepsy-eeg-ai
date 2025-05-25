@@ -15,7 +15,6 @@ export class AppComponent implements OnInit {
   constructor(private appSettingsService: AppSettingsService) {}
 
   ngOnInit(): void {
-    // Make sure theme settings are applied at the component level too
     this.appSettingsService.loadAndApplySettings();
   }
 }

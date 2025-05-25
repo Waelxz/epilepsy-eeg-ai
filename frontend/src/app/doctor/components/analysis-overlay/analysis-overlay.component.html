@@ -1,0 +1,18 @@
+<div class="overlay-backdrop" (click)="close()"></div>
+<div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>New EEG Analysis</h2>
+            <button class="close-btn" (click)="close()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <!-- Pass patientId if provided -->
+            <app-analysis-new 
+                [overlayMode]="true"
+                [patientIdParam]="patientId"
+                (analysisCreated)="onAnalysisCreated($event)">
+            </app-analysis-new>
+        </div>
+    </div>
+</div>

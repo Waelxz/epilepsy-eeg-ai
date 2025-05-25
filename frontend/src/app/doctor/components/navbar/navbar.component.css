@@ -4,6 +4,9 @@
     justify-content: flex-end;
     align-items: center;
     padding: 0 24px;
+    background-color: white;
+    /* Add a subtle border on the left side for separation without shadow */
+    border-left: 1px solid #f0f0f0;
 }
 
 .profile-section {

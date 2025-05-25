@@ -1,0 +1,169 @@
+<div class="dashboard-content-container">
+    <div class="dashboard-header">
+        <h1 class="welcome-message">Welcome back, {{ currentUserName }}</h1>
+        <div class="last-updated" *ngIf="!isLoading">
+            <span>Last updated: {{getCurrentTime()}}</span>
+            <button class="refresh-btn" (click)="loadSummaryData()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Loading dashboard data...</p>
+    </div>
+    
+    <!-- Error state -->
+    <div class="error-container" *ngIf="dataError && !isLoading">
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load dashboard data. Please try again.</p>
+        </div>
+        <button class="btn-retry" (click)="loadSummaryData()">Retry</button>
+    </div>
+
+    <!-- Main content for loaded state -->
+    <div class="dashboard-main" *ngIf="!isLoading && !dataError">
+        <!-- Quick action buttons -->
+        <div class="quick-actions">
+            <button class="quick-action-btn" routerLink="/doctor/patients">
+                <i class="fas fa-user-plus"></i>
+                <span>Patients</span>
+            </button>
+            <button class="quick-action-btn" routerLink="/doctor/analyses">
+                <i class="fas fa-brain"></i>
+                <span>Analyses</span>
+            </button>
+            <button class="quick-action-btn primary" routerLink="/doctor/analyses/new">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Analysis</span>
+            </button>
+        </div>
+
+        <!-- Quick Stats Section -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+                <div class="stat-content">
+                    <h3>Total Patients</h3>
+                    <p class="stat-number">{{ totalPatients }}</p>
+                    <p class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> 12% <span>this month</span>
+                    </p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-brain"></i></div>
+                <div class="stat-content">
+                    <h3>Recent Analyses</h3>
+                    <p class="stat-number">{{ recentAnalyses }}</p>
+                    <p class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> 8% <span>vs last month</span>
+                    </p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+                <div class="stat-content">
+                    <h3>Pending Reviews</h3>
+                    <p class="stat-number">{{ pendingReviews }}</p>
+                    <p class="stat-trend negative" *ngIf="pendingReviews > 5">
+                        <i class="fas fa-arrow-up"></i> <span>needs attention</span>
+                    </p>
+                    <p class="stat-trend positive" *ngIf="pendingReviews <= 5">
+                        <i class="fas fa-arrow-down"></i> <span>all caught up</span>
+                    </p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+                <div class="stat-content">
+                    <h3>Results Ratio</h3>
+                    <p class="stat-number">
+                        <span class="normal-result">{{ normalResults }}</span>:<span class="abnormal-result">{{ abnormalResults }}</span>
+                    </p>
+                    <p class="stat-context">normal:abnormal</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Layout -->
+        <div class="dashboard-grid">
+            <!-- Left column - wider -->
+            <div class="dashboard-column main-column">
+                <!-- Recent Analyses Section -->
+                <div class="chart-card highlight-card">
+                    <div class="card-header">
+                        <h4 class="chart-title">Recent Analyses</h4>
+                        <a routerLink="/doctor/analyses" class="view-all-link">
+                            View All <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="recent-analyses-container">
+                        <div class="recent-analyses-list scrollable">
+                            <div class="recent-analysis-item" *ngFor="let analysis of recentAnalysesList">
+                                <div class="analysis-icon" [ngClass]="{'normal': analysis.status === 'normal', 'abnormal': analysis.status === 'abnormal', 'pending': analysis.status === 'pending'}">
+                                    <i class="fas" [ngClass]="{
+                                        'fa-check-circle': analysis.status === 'normal',
+                                        'fa-exclamation-circle': analysis.status === 'abnormal',
+                                        'fa-clock': analysis.status === 'pending'
+                                    }"></i>
+                                </div>
+                                <div class="analysis-details">
+                                    <h5>{{analysis.patientName}}</h5>
+                                    <p>{{analysis.status === 'normal' ? 'Normal' : (analysis.status === 'abnormal' ? 'Abnormal' : 'Pending')}}</p>
+                                    <span class="analysis-time">{{getTimeAgo(analysis.uploadedAt)}}</span>
+                                </div>
+                                <div class="analysis-action">
+                                    <button class="view-details-btn" [routerLink]="['/doctor/analyses', analysis.id]">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Age Distribution Chart -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h4 class="chart-title">Patient Age Distribution</h4>
+                    </div>
+                    <div class="chart-container horizontal-chart">
+                        <canvas #ageDistributionChart></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right column - narrower -->
+            <div class="dashboard-column side-column">
+                <!-- Results Distribution Chart -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h4 class="chart-title">Analysis Results</h4>
+                        <div class="legend-pills">
+                            <span class="legend-pill normal">Normal</span>
+                            <span class="legend-pill abnormal">Abnormal</span>
+                            <span class="legend-pill pending">Pending</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas #resultsChart></canvas>
+                    </div>
+                </div>
+                
+                <!-- Results by Age Groups -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h4 class="chart-title">Results by Age Group</h4>
+                    </div>
+                    <div class="chart-container">
+                        <canvas #resultsByAgeChart></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

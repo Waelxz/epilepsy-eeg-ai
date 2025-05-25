@@ -1,0 +1,206 @@
+<div class="analysis-history-container">
+  <div class="header">
+    <div class="title">
+      <h1>Analysis History</h1>
+      <p>Review all previous analyses and their results</p>
+    </div>
+  </div>
+
+  <div class="filters-row">
+    <div class="left-filters">
+      <div class="search-container">
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (keyup.enter)="onSearch()"
+          placeholder="Search by file name or patient ID"
+      >
+        <button class="btn-search" (click)="onSearch()">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+
+      <div class="filter-group status-select">
+        <select [(ngModel)]="statusFilter" (change)="onSearch()">
+          <option value="">All Statuses</option>
+          <option value="queued">Queued</option>
+          <option value="processing">Processing</option>
+          <option value="completed">Completed</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+
+      <div class="filter-group model-select">
+        <select [(ngModel)]="modelFilter" (change)="onSearch()">
+          <option value="">All Models</option>
+          <option value="epilepsy_v1">Epilepsy v1</option>
+          <option value="epilepsy_v2">Epilepsy v2</option>
+        </select>
+      </div>
+      </div>
+
+    <div class="sort-filter">
+      <button class="btn-clear-filters" (click)="clearFilters()">
+        <i class="fas fa-times"></i> Clear Filters
+      </button>
+      <div class="select-container">
+        <select [(ngModel)]="sortOption" (change)="applySortFilter()">
+          <option value="recent">Most Recent</option>
+          <option value="oldest">Oldest</option>
+          <option value="filename-asc">Filename (A-Z)</option>
+          <option value="filename-desc">Filename (Z-A)</option>
+          <option value="status-asc">Status (A-Z)</option>
+          <option value="status-desc">Status (Z-A)</option>
+        </select>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-filters">
+    <span 
+      class="filter-option" 
+      [class.active]="resultFilter === 'all'"
+      (click)="filterByResult('all')"
+    >All</span>
+    <span 
+      class="filter-option" 
+      [class.active]="resultFilter === 'abnormal'"
+      (click)="filterByResult('abnormal')"
+    >Abnormal</span>
+    <span 
+      class="filter-option" 
+      [class.active]="resultFilter === 'normal'"
+      (click)="filterByResult('normal')"
+    >Normal</span>
+    <span 
+      class="filter-option" 
+      [class.active]="resultFilter === 'pending'"
+      (click)="filterByResult('pending')"
+    >Pending</span>
+  </div>
+
+  <!-- Content area that will be scrollable -->
+  <div class="content-area">
+    <!-- Loading spinner -->
+    <div class="loading-spinner" *ngIf="loading">
+      <div class="spinner"></div>
+      <span>Loading analyses...</span>
+    </div>
+
+    <!-- Error message -->
+    <div class="error-message" *ngIf="error && !loading">
+    <i class="fas fa-exclamation-circle"></i>
+      {{ error }}
+    <button (click)="loadAnalyses()" class="btn-retry">Retry</button>
+  </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="analyses.length === 0 && !loading && !error">
+      <div class="empty-state-icon">
+        <i class="fas fa-file-medical-alt"></i>
+      </div>
+      <h3>No analyses found</h3>
+      <p>Try adjusting your search or filters</p>
+    </div>
+
+    <!-- Analysis list table -->
+    <div class="table-container" *ngIf="analyses.length > 0 && !loading">
+    <table class="analysis-table">
+      <thead>
+        <tr>
+            <th>Date</th>
+          <th>Patient</th>
+          <th>File</th>
+            <th>Status</th>
+          <th>Model</th>
+          <th>Result</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let analysis of analyses">
+          <td>{{ formatDate(analysis.uploadDate) }}</td>
+          <td>
+            <a class="patient-name-link" (click)="viewPatientDetails(analysis.patientId)">
+              {{ patientNames[analysis.patientId] || 'Loading...' }}
+            </a>
+          </td>
+          <td>
+            <div class="file-info">
+              <span class="file-name">{{ analysis.fileName }}</span>
+              <span class="file-size" *ngIf="analysis.fileSize">{{ formatFileSize(analysis.fileSize) }}</span>
+            </div>
+          </td>
+          <td>
+              <span class="analysis-status" [ngClass]="getStatusClass(analysis.status)">
+              {{ analysis.status }}
+            </span>
+          </td>
+          <td>{{ analysis.modelUsed }}</td>
+          <td>
+            <div *ngIf="analysis.status === 'completed' && analysis.result" class="result-info">
+                <span class="analysis-status" [ngClass]="{'normal': analysis.result.class === 1, 'abnormal': analysis.result.class === 0}">
+                {{ getStatusLabel(analysis) }}
+                <span class="technical-class">({{ getTechnicalClassification(analysis) }})</span>
+              </span>
+                <div class="analysis-info" *ngIf="analysis.result.probability">
+                  {{ (analysis.result.probability * 100).toFixed(1) }}% confidence
+                </div>
+            </div>
+            <div *ngIf="analysis.status !== 'completed' || !analysis.result">
+              -
+            </div>
+          </td>
+            <td class="actions">
+              <a (click)="viewAnalysisDetails(analysis)" class="btn-action view">
+                <i class="fas fa-eye"></i> View
+              </a>
+            <a *ngIf="analysis.status === 'completed' && analysis.reportGenerated" 
+               [routerLink]="['/doctor/reports', analysis.id]" 
+                 class="btn-action report">
+                <i class="fas fa-file-alt"></i>
+              </a>
+              <a *ngIf="!(analysis.status === 'completed' && analysis.reportGenerated)"
+                 class="btn-action report disabled">
+              <i class="fas fa-file-alt"></i>
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="analyses.length > 0 && !loading">
+    <button 
+      class="btn-page" 
+      [disabled]="currentPage === 1" 
+      (click)="onPageChange(currentPage - 1)" 
+    >
+      <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="page-numbers">
+      <span *ngFor="let page of getPages()" 
+          class="page-number" 
+          [class.active]="currentPage === page"
+          (click)="onPageChange(page)"
+      >{{ page }}</span>
+    </div>
+
+    <button 
+      class="btn-page" 
+      [disabled]="currentPage === totalPages" 
+      (click)="onPageChange(currentPage + 1)" 
+    >
+      <i class="fas fa-chevron-right"></i>
+    </button>
+    
+    <div class="page-info">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} - 
+      {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} analyses
+    </div>
+  </div>
+</div>

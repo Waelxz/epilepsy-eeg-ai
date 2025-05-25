@@ -1,0 +1,360 @@
+<div class="patient-details-container" *ngIf="!isLoading && patient">
+    <!-- Enhanced header with basic patient info -->
+    <div class="patient-header">
+        <div class="profile-section">
+            <!-- Back button now beside profile icon -->
+            <button class="btn-back" (click)="goBack()">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <div class="profile-icon">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="patient-info">
+                <h1>{{ getPatientFullName() }}</h1>
+                <div class="patient-meta">
+                    <span class="patient-id">ID: {{ patient.patientId }}</span>
+                    <span class="patient-age">{{ calculateAge(patient.dateOfBirth) }} years</span>
+                    <span class="patient-gender">{{ patient.gender }}</span>
+                </div>
+            </div>
+        </div>
+        <!-- Add edit and delete buttons -->
+        <div class="patient-actions">
+            <button class="btn-gradient" (click)="generatePatientReport()">
+                <i class="fas fa-file-medical-alt"></i> Generate Patient Report
+            </button>
+            <button class="btn-edit" (click)="editPatient()">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="btn-delete" (click)="confirmDeletePatient()">
+                <i class="fas fa-trash-alt"></i> Delete
+            </button>
+        </div>
+    </div>
+
+    <!-- Basic info section -->
+    <div class="basic-info-section">
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Date of Birth</label>
+                <p>{{ patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'N/A' }}</p>
+            </div>
+            <div class="info-item">
+                <label>Phone</label>
+                <p>{{ patient.contactInfo?.phone || 'Not provided' }}</p>
+            </div>
+            <div class="info-item">
+                <label>Record Created</label>
+                <p>{{ patient.createdAt ? formatDate(patient.createdAt) : 'N/A' }}</p>
+            </div>
+            <div class="info-item">
+                <label>Email</label>
+                <p>{{ patient.contactInfo?.email || 'Not provided' }}</p>
+            </div>
+            <div class="info-item">
+                <label>Address</label>
+                <p>{{ patient.contactInfo?.address || 'Not provided' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simplified tabs navigation with analyses, history, and reports -->
+    <div class="tabs-navigation">
+        <div class="tab" 
+             [class.active]="activeTab === 'analyses'"
+             (click)="setActiveTab('analyses')">
+            <i class="fas fa-chart-line"></i> Analyses
+            <span class="badge" *ngIf="patient.analysisStatus?.totalAnalysisCount">
+                {{ patient.analysisStatus?.totalAnalysisCount }}
+            </span>
+        </div>
+        <div class="tab" 
+             [class.active]="activeTab === 'history'"
+             (click)="setActiveTab('history')">
+            <i class="fas fa-clipboard-list"></i> Medical History
+        </div>
+        <div class="tab" 
+             [class.active]="activeTab === 'timeline'"
+             (click)="setActiveTab('timeline')">
+            <i class="fas fa-history"></i> Timeline
+        </div>
+        <div class="tab" 
+             [class.active]="activeTab === 'reports'"
+             (click)="setActiveTab('reports')">
+            <i class="fas fa-file-medical-alt"></i> Reports
+            <span class="badge" *ngIf="reports.length">
+                {{ reports.length }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Tab content -->
+    <div class="tab-content">
+        <!-- Analyses Tab -->
+        <div class="tab-pane" *ngIf="activeTab === 'analyses'">
+            <div class="tab-header">
+                <h2>EEG Analyses</h2>
+                <button class="btn-gradient" (click)="startNewAnalysis()">
+                    <i class="fas fa-plus"></i> New Analysis
+                </button>
+            </div>
+
+            <div class="analyses-list" *ngIf="analyses.length > 0">
+                <div class="analysis-item" *ngFor="let analysis of analyses">
+                    <div class="analysis-header">
+                        <span class="analysis-date">{{ analysis.uploadDate ? formatDate(analysis.uploadDate) : 'Unknown date' }}</span>
+                        <span class="analysis-status" [ngClass]="getAnalysisStatusClass(analysis)">
+                            {{ getAnalysisStatusLabel(analysis) }}
+                        </span>
+                    </div>
+                    <div class="analysis-body">
+                        <div class="analysis-file">
+                            <i class="fas fa-file-medical"></i>
+                            {{ analysis.fileName }}
+                        </div>
+                        <div class="analysis-model">Model: {{ analysis.modelUsed }}</div>
+                        
+                        <div class="analysis-result" *ngIf="analysis.status === 'completed' && analysis.result">
+                            <div class="result-item">
+                                <label>Status:</label>
+                                <span [ngClass]="{'text-danger': analysis.result.class === 0, 'text-success': analysis.result.class === 1}">
+                                    {{ getAnalysisStatusLabel(analysis) }}
+                                </span>
+                            </div>
+                            <div class="result-item">
+                                <label>Classification:</label>
+                                <span>{{ getTechnicalClassification(analysis) }}</span>
+                            </div>
+                            <div class="result-item">
+                                <label>Confidence:</label>
+                                <span>{{ (analysis.result.probability * 100).toFixed(1) }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="analysis-actions">
+                        <!-- Show Generate button if no report exists -->
+                        <button class="btn-secondary" *ngIf="analysis.status === 'completed' && !hasReport(analysis.id || '')" 
+                                (click)="generateReport(analysis.id || '', 'analysis')"
+                                [attr.data-analysis]="analysis.id">
+                            <i class="fas fa-file-pdf"></i> Analysis Report
+                        </button>
+                        
+                        <!-- Show Download and Regenerate buttons if report exists -->
+                        <div class="existing-report-actions" *ngIf="analysis.status === 'completed' && hasReport(analysis.id || '')">
+                            <button class="btn-secondary" (click)="downloadExistingReport(analysis.id || '')">
+                                <i class="fas fa-download"></i> Download Report
+                            </button>
+                            <button class="btn-secondary regen-button" (click)="regenerateReport(analysis.id || '', 'analysis')">
+                                <i class="fas fa-sync-alt"></i> Regenerate
+                            </button>
+                        </div>
+                        
+                        <button class="btn-view" 
+                                (click)="viewAnalysisDetails(analysis.id || '')">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="empty-state" *ngIf="!analyses.length">
+                <i class="fas fa-chart-line"></i>
+                <p>No analyses found for this patient.</p>
+                <button class="btn-primary" (click)="startNewAnalysis()">
+                    <i class="fas fa-plus"></i> Start First Analysis
+                </button>
+            </div>
+        </div>
+
+        <!-- Medical History Tab -->
+        <div class="tab-pane" *ngIf="activeTab === 'history'">
+            <div class="info-section">
+                <h2>Medical History</h2>
+                <div class="text-content">
+                    <p>{{ patient.medicalHistory || 'No medical history recorded.' }}</p>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h2>Current Medications</h2>
+                <div *ngIf="patient.medications && patient.medications.length > 0">
+                    <div class="medication-list">
+                        <div class="medication-item" *ngFor="let med of patient.medications">
+                            <div class="medication-name">{{ med.name }}</div>
+                            <div class="medication-dosage">{{ med.dosage }}</div>
+                            <div class="medication-frequency">{{ med.frequency }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div *ngIf="!patient.medications || patient.medications.length === 0" class="empty-state">
+                    No medications recorded.
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h2>Clinical Notes</h2>
+                <div class="text-content">
+                    <p>{{ patient.notes || 'No clinical notes recorded.' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Tab -->
+        <div class="tab-pane" *ngIf="activeTab === 'timeline'">
+            <app-patient-timeline 
+                [patientId]="patientId"
+                [analyses]="analyses"
+                [reports]="reports"
+                [patient]="patient">
+            </app-patient-timeline>
+        </div>
+
+        <!-- Reports Tab -->
+        <div class="tab-pane" *ngIf="activeTab === 'reports'">
+            <div class="tab-header">
+            <h2>Generated Reports</h2>
+                <div class="filter-section">
+                    <select class="filter-dropdown" [(ngModel)]="reportsFilter.type" (change)="filterReports()">
+                        <option value="all">All Types</option>
+                        <option value="patient">Patient Reports</option>
+                        <option value="analysis">Analysis Reports</option>
+                    </select>
+                    <select class="filter-dropdown" [(ngModel)]="reportsFilter.sort" (change)="filterReports()">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="reports-list" *ngIf="filteredReports.length > 0">
+                <div class="report-item" *ngFor="let report of filteredReports">
+                    <div class="report-content">
+                        <div class="report-type" [ngClass]="{'patient-report': report.reportType === 'patient', 'analysis-report': report.reportType === 'analysis'}">
+                            <i [class]="report.reportType === 'patient' ? 'fas fa-user-md' : 'fas fa-chart-line'"></i>
+                        {{ report.reportType | titlecase }} Report
+                    </div>
+                        <div class="report-details">
+                    <div class="report-date">
+                                <i class="far fa-calendar-alt"></i>
+                                Generated on {{ report.generatedDate ? formatDateTime(report.generatedDate) : 'Unknown date' }}
+                            </div>
+                            <div class="report-analysis" *ngIf="report.reportType === 'analysis' && getAnalysisForReport(report)">
+                                <i class="fas fa-file-medical"></i>
+                                Analysis: {{ getAnalysisForReport(report)?.fileName || 'Unknown' }}
+                            </div>
+                            <div class="report-result" *ngIf="report.reportType === 'analysis' && getAnalysisForReport(report)?.result">
+                                <i class="fas fa-tags"></i>
+                                Result: {{ getAnalysisResult(getAnalysisForReport(report)) }}
+                            </div>
+                            <div class="report-id">
+                                <i class="fas fa-fingerprint"></i>
+                                ID: {{ report.id ? report.id.substring(0, 8) : 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="report-actions">
+                        <button class="btn-icon" (click)="downloadReport(report.id || '')" [id]="'report-' + report.id" title="Download Report">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn-icon share" (click)="openShareReportDialog(report.id || '')" title="Share Report">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                        <button class="btn-icon delete" (click)="confirmDeleteReport(report.id || '')" title="Delete Report">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="empty-state" *ngIf="!filteredReports.length">
+                <i class="fas fa-file-medical-alt"></i>
+                <p>No reports have been generated for this patient yet.</p>
+                <p class="hint">Generate reports from the Analyses tab after completing an EEG analysis.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading state -->
+<div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading patient data...</p>
+</div>
+
+<!-- Error state -->
+<div class="error-container" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle"></i>
+    <p>{{ errorMessage }}</p>
+    <button class="btn-secondary" (click)="goToPatientList()">
+        Back to Patient List
+    </button>
+</div>
+
+<!-- Analysis Overlay -->
+<app-analysis-overlay
+    *ngIf="showAnalysisOverlay"
+    [patientId]="patientId"
+    (closeOverlay)="closeAnalysisOverlay()"
+    (analysisCreated)="onAnalysisCreated($event)">
+</app-analysis-overlay>
+
+<!-- Patient Edit Modal -->
+<app-patient-edit
+    *ngIf="showEditPatientModal"
+    [patient]="patient"
+    (closeModal)="closeEditPatientModal()"
+    (patientUpdated)="onPatientUpdated()">
+</app-patient-edit>
+
+<!-- Delete Confirmation Dialog -->
+<app-confirm-dialog
+    *ngIf="showDeleteConfirmation"
+    title="Delete Patient"
+    [message]="'Are you sure you want to delete ' + getPatientFullName() + '? This action cannot be undone.'"
+    confirmText="Delete"
+    type="delete"
+    (onCancel)="cancelDelete()"
+    (onConfirm)="deletePatient()">
+</app-confirm-dialog>
+
+<!-- Delete Report Confirmation Dialog -->
+<app-confirm-dialog
+    *ngIf="showDeleteReportConfirmation"
+    title="Delete Report"
+    message="Are you sure you want to delete this report? This action cannot be undone."
+    confirmText="Delete"
+    type="delete"
+    (onCancel)="cancelDeleteReport()"
+    (onConfirm)="deleteReport(reportToDeleteId)">
+</app-confirm-dialog>
+
+<!-- Email Input Dialog (Custom Dialog) -->
+<div class="overlay-backdrop" *ngIf="showShareReportDialog" (click)="cancelShareReport()"></div>
+<div class="dialog-container" *ngIf="showShareReportDialog" (click)="$event.stopPropagation()">
+  <div class="dialog-content">
+    <div class="dialog-header">
+      <h2>Share Report</h2>
+    </div>
+    <div class="dialog-body">
+      <p>Enter an email address to share this report with:</p>
+      <div class="share-form">
+        <input 
+          type="email" 
+          [(ngModel)]="emailToShareWith" 
+          placeholder="email@example.com"
+          (keyup.enter)="shareReport(reportToShareId, emailToShareWith)"
+        >
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn-cancel" (click)="cancelShareReport()">Cancel</button>
+      <button 
+        class="btn-share" 
+        [disabled]="!emailToShareWith || !emailToShareWith.includes('@')" 
+        (click)="shareReport(reportToShareId, emailToShareWith)">
+        <i class="fas fa-paper-plane"></i>
+        Share
+      </button>
+    </div>
+  </div>
+</div>

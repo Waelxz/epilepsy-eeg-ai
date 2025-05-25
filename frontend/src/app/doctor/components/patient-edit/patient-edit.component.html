@@ -1,0 +1,253 @@
+<div class="overlay-backdrop" (click)="close()"></div>
+<div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Patient</h2>
+            <button class="close-btn" (click)="close()">&times;</button>
+        </div>
+
+        <!-- Success Message -->
+        <div class="alert success" *ngIf="successMessage">
+            <i class="fas fa-check-circle"></i>
+            {{ successMessage }}
+        </div>
+
+        <!-- Error Message -->
+        <div class="alert error" *ngIf="errorMessage">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ errorMessage }}
+        </div>
+
+        <!-- Stepper Header -->
+        <div class="stepper-header">
+            <div *ngFor="let i of [1, 2, 3]" 
+                 class="step-indicator" 
+                 [class.active]="currentStep === i"
+                 [class.completed]="currentStep > i">
+                <div class="step-circle">
+                    <i *ngIf="currentStep > i" class="fas fa-check"></i>
+                    <span *ngIf="currentStep <= i">{{ i }}</span>
+                </div>
+                <div class="step-label">{{ getStepLabel(i) }}</div>
+                <div *ngIf="i < 3" class="step-line" [class.active]="currentStep > i"></div>
+            </div>
+        </div>
+
+        <!-- Patient Form -->
+        <div class="modal-body">
+            <form [formGroup]="patientForm" (ngSubmit)="onSubmit()">
+                <!-- Step 1: Basic Information -->
+                <div *ngIf="currentStep === 1" class="form-step">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name *</label>
+                            <input 
+                                type="text" 
+                                id="firstName" 
+                                formControlName="firstName" 
+                                placeholder="First Name" 
+                                [class.invalid]="patientForm.get('firstName')?.invalid && patientForm.get('firstName')?.touched"
+                            >
+                            <div class="error-message" *ngIf="patientForm.get('firstName')?.invalid && patientForm.get('firstName')?.touched">
+                                <span *ngIf="patientForm.get('firstName')?.errors?.['required']">First Name is required</span>
+                                <span *ngIf="patientForm.get('firstName')?.errors?.['minlength']">First Name must be at least 2 characters</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastName">Last Name *</label>
+                            <input 
+                                type="text" 
+                                id="lastName" 
+                                formControlName="lastName" 
+                                placeholder="Last Name" 
+                                [class.invalid]="patientForm.get('lastName')?.invalid && patientForm.get('lastName')?.touched"
+                            >
+                            <div class="error-message" *ngIf="patientForm.get('lastName')?.invalid && patientForm.get('lastName')?.touched">
+                                <span *ngIf="patientForm.get('lastName')?.errors?.['required']">Last Name is required</span>
+                                <span *ngIf="patientForm.get('lastName')?.errors?.['minlength']">Last Name must be at least 2 characters</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dateOfBirth">Date of Birth *</label>
+                            <input 
+                                type="date" 
+                                id="dateOfBirth" 
+                                formControlName="dateOfBirth" 
+                                [class.invalid]="patientForm.get('dateOfBirth')?.invalid && patientForm.get('dateOfBirth')?.touched"
+                            >
+                            <div class="error-message" *ngIf="patientForm.get('dateOfBirth')?.invalid && patientForm.get('dateOfBirth')?.touched">
+                                <span *ngIf="patientForm.get('dateOfBirth')?.errors?.['required']">Date of Birth is required</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gender">Gender *</label>
+                            <select 
+                                id="gender" 
+                                formControlName="gender" 
+                                [class.invalid]="patientForm.get('gender')?.invalid && patientForm.get('gender')?.touched"
+                            >
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="error-message" *ngIf="patientForm.get('gender')?.invalid && patientForm.get('gender')?.touched">
+                                <span *ngIf="patientForm.get('gender')?.errors?.['required']">Gender is required</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Contact Information -->
+                <div *ngIf="currentStep === 2" class="form-step" formGroupName="contactInfo">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input 
+                                type="tel" 
+                                id="phone" 
+                                formControlName="phone" 
+                                placeholder="e.g. (123) 456-7890"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                formControlName="email" 
+                                placeholder="email@example.com" 
+                                [class.invalid]="patientForm.get('contactInfo.email')?.invalid && patientForm.get('contactInfo.email')?.touched"
+                            >
+                            <div class="error-message" *ngIf="patientForm.get('contactInfo.email')?.invalid && patientForm.get('contactInfo.email')?.touched">
+                                <span *ngIf="patientForm.get('contactInfo.email')?.errors?.['email']">Please enter a valid email address</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <input 
+                                type="text" 
+                                id="address" 
+                                formControlName="address" 
+                                placeholder="Street Address, City, State, Zip Code"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Medical Information -->
+                <div *ngIf="currentStep === 3" class="form-step">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="medicalHistory">Medical History</label>
+                            <textarea 
+                                id="medicalHistory" 
+                                formControlName="medicalHistory" 
+                                placeholder="Enter relevant medical history and conditions..."
+                                rows="3"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Medications -->
+                    <div class="medications-section">
+                        <div class="section-header">
+                            <h3>Medications</h3>
+                            <button type="button" class="btn-add" (click)="addMedication()">
+                                <i class="fas fa-plus"></i> Add Medication
+                            </button>
+                        </div>
+
+                        <div class="medications-list" formArrayName="medications">
+                            <div class="no-medications" *ngIf="medications.length === 0">
+                                No medications added. Click "Add Medication" to add one.
+                            </div>
+
+                            <div class="medication-item" *ngFor="let medication of medications.controls; let i = index" [formGroupName]="i">
+                                <div class="medication-form">
+                                    <div class="form-group">
+                                        <label for="medicationName{{i}}">Name *</label>
+                                        <input 
+                                            type="text" 
+                                            id="medicationName{{i}}" 
+                                            formControlName="name" 
+                                            placeholder="Medication Name" 
+                                            [class.invalid]="medication.get('name')?.invalid && medication.get('name')?.touched"
+                                        >
+                                        <div class="error-message" *ngIf="medication.get('name')?.invalid && medication.get('name')?.touched">
+                                            <span *ngIf="medication.get('name')?.errors?.['required']">Medication name is required</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="medicationDosage{{i}}">Dosage</label>
+                                        <input 
+                                            type="text" 
+                                            id="medicationDosage{{i}}" 
+                                            formControlName="dosage" 
+                                            placeholder="e.g. 10mg"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="medicationFrequency{{i}}">Frequency</label>
+                                        <input 
+                                            type="text" 
+                                            id="medicationFrequency{{i}}" 
+                                            formControlName="frequency" 
+                                            placeholder="e.g. Twice daily"
+                                        >
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn-remove" (click)="removeMedication(i)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="notes">Additional Notes</label>
+                            <textarea 
+                                id="notes" 
+                                formControlName="notes" 
+                                placeholder="Enter any additional notes about the patient..."
+                                rows="3"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Navigation -->
+                <div class="form-navigation">
+                    <div>
+                        <button type="button" class="btn-secondary" *ngIf="currentStep > 1" (click)="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-primary" *ngIf="currentStep < totalSteps" (click)="nextStep()">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button type="submit" class="btn-success" *ngIf="currentStep === totalSteps" [disabled]="isSubmitting">
+                            <i class="fas fa-save"></i>
+                            <span *ngIf="!isSubmitting">Save Changes</span>
+                            <span *ngIf="isSubmitting">Saving...</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,89 @@
+<div class="patient-selection-container">
+    <div class="selection-header">
+        <h2>Select Patient</h2>
+        <p>Choose a patient for EEG analysis</p>
+    </div>
+    
+    <!-- Search Bar -->
+    <div class="search-container">
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input 
+                type="text" 
+                [(ngModel)]="searchQuery" 
+                (input)="filterPatients()"
+                placeholder="Search by name or ID"
+                class="search-input">
+            <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''; filterPatients()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Patient List -->
+    <div class="patient-list-container" *ngIf="!isLoading && !errorMessage && filteredPatients.length > 0">
+        <div class="patient-list">
+            <div 
+                *ngFor="let patient of filteredPatients" 
+                class="patient-item"
+                [class.selected]="selectedPatient?.id === patient.id"
+                (click)="selectPatient(patient)">
+                
+                <div class="patient-info">
+                    <div class="patient-name">{{ getPatientFullName(patient) }}</div>
+                    <div class="patient-meta">
+                        <span class="patient-id">ID: {{ patient.patientId }}</span>
+                        <span class="patient-age">{{ patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'N/A' }}</span>
+                        <span class="patient-gender">{{ patient.gender }}</span>
+                    </div>
+                </div>
+                
+                <div class="patient-stats" *ngIf="patient.analysisStatus?.hasAnalysis">
+                    <div class="stat-item">
+                        <span class="stat-label">Analyses</span>
+                        <span class="stat-value">{{ patient.analysisStatus?.totalAnalysisCount }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Last Analysis</span>
+                        <span class="stat-value">{{ getLastAnalysisDate(patient) }}</span>
+                    </div>
+                </div>
+                
+                <div class="no-analysis" *ngIf="!patient.analysisStatus?.hasAnalysis">
+                    <span>No previous analyses</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && !errorMessage && filteredPatients.length === 0">
+        <i class="fas fa-search"></i>
+        <p>No patients found matching your search.</p>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button 
+            class="btn-primary" 
+            [disabled]="!selectedPatient"
+            (click)="confirmSelection()">
+            Continue with Selected Patient
+        </button>
+    </div>
+    
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Loading patients...</p>
+    </div>
+    
+    <!-- Error State -->
+    <div class="error-banner" *ngIf="errorMessage && !isLoading">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+        <button class="btn-retry" (click)="loadPatients()">
+            <i class="fas fa-sync"></i>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,133 @@
+<div class="analysis-summary-container">
+    <!-- Processing State -->
+    <div class="analysis-processing" *ngIf="isAnalyzing">
+        <div class="processing-header">
+            <h2>Processing EEG Analysis</h2>
+            <p>Please wait while we analyze the EEG recording</p>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-bar-fill" [style.width.%]="progressValue"></div>
+            </div>
+            <div class="progress-value">{{ progressValue }}%</div>
+        </div>
+        
+        <div class="processing-steps">
+            <div class="step-item" [class.completed]="progressValue >= 25">
+                <div class="step-icon">
+                    <i class="fas" [ngClass]="{'fa-check': progressValue >= 25, 'fa-spinner fa-spin': progressValue < 25 && progressValue > 0}"></i>
+                </div>
+                <div class="step-label">Uploading EEG File</div>
+            </div>
+            
+            <div class="step-item" [class.completed]="progressValue >= 50">
+                <div class="step-icon">
+                    <i class="fas" [ngClass]="{'fa-check': progressValue >= 50, 'fa-spinner fa-spin': progressValue >= 25 && progressValue < 50}"></i>
+                </div>
+                <div class="step-label">Preprocessing Data</div>
+            </div>
+            
+            <div class="step-item" [class.completed]="progressValue >= 75">
+                <div class="step-icon">
+                    <i class="fas" [ngClass]="{'fa-check': progressValue >= 75, 'fa-spinner fa-spin': progressValue >= 50 && progressValue < 75}"></i>
+                </div>
+                <div class="step-label">Applying ML Model</div>
+            </div>
+            
+            <div class="step-item" [class.completed]="progressValue >= 100">
+                <div class="step-icon">
+                    <i class="fas" [ngClass]="{'fa-check': progressValue >= 100, 'fa-spinner fa-spin': progressValue >= 75 && progressValue < 100}"></i>
+                </div>
+                <div class="step-label">Generating Report</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Analysis Result -->
+    <div class="analysis-result" *ngIf="isComplete && analysisResult">
+        <div class="result-header">
+            <h2>Analysis Complete</h2>
+            <p>The EEG analysis has been successfully completed</p>
+        </div>
+        
+        <div class="patient-file-info">
+            <div class="info-section">
+                <h3>Patient Information</h3>
+                <div class="info-content">
+                    <div class="info-row">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value">{{ getPatientFullName() }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">ID:</span>
+                        <span class="info-value">{{ patient?.patientId || patientId }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>File Information</h3>
+                <div class="info-content">
+                    <div class="info-row">
+                        <span class="info-label">Filename:</span>
+                        <span class="info-value">{{ analysisResult.fileName }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Uploaded:</span>
+                        <span class="info-value">{{ formatDate(analysisResult.uploadDate) }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Model:</span>
+                        <span class="info-value">{{ analysisResult.modelUsed }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result-classification">
+            <div class="classification-header">
+                <h3>Analysis Result</h3>
+            </div>
+            
+            <div class="classification-content" [ngClass]="getClassificationClass(analysisResult.result)">
+                <div class="classification-icon">
+                    <i class="fas" [ngClass]="{'fa-exclamation-triangle': analysisResult.result.class === 0, 'fa-check-circle': analysisResult.result.class === 1}"></i>
+                </div>
+                <div class="classification-details">
+                    <div class="classification-label">
+                        {{ getStatusLabel(analysisResult.result) }}
+                        <span class="technical-classification">({{ getTechnicalClassification(analysisResult.result) }})</span>
+                    </div>
+                    <div class="classification-confidence">
+                        Confidence: {{ (analysisResult.result.probability * 100).toFixed(1) }}%
+                    </div>
+                    <div class="classification-interpretation">
+                        {{ analysisResult.result.interpretation }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn-secondary">
+                <i class="fas fa-file-pdf"></i> Generate Report
+            </button>
+            <button class="btn-primary" (click)="viewDetails()">
+                <i class="fas fa-eye"></i> View Detailed Analysis
+            </button>
+        </div>
+    </div>
+    
+    <!-- Error State -->
+    <div class="error-container" *ngIf="hasFailed || errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        <h3>Analysis Failed</h3>
+        <p>{{ errorMessage || (analysisResult?.error || 'An error occurred during the analysis process. Please try again.') }}</p>
+        <div class="error-actions">
+            <button class="btn-secondary" (click)="retryAnalysis()">
+                <i class="fas fa-redo"></i> Try Again
+            </button>
+        </div>
+    </div>
+</div>

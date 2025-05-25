@@ -3,13 +3,9 @@
     <app-sidebar class="sidebar"></app-sidebar>
 
     <div class="main-content">
-        <!-- Navbar -->
-        <app-navbar class="navbar"></app-navbar>
-
-        <!-- Import Button -->
-        <app-import-button class="import-button"></app-import-button>
-
-        <!-- Dashboard Content -->
-        <app-dashboard-content class="dashboard-content"></app-dashboard-content>
+        <!-- Main Content Area - Router Outlet -->
+        <div class="content-area">
+            <router-outlet></router-outlet>
+        </div>
     </div>
 </div>

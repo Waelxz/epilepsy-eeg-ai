@@ -1,45 +1,886 @@
 .dashboard-content-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 16px;
+    background-color: var(--background-color, #f8f9fb);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: visible;
+    height: auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .welcome-message {
     color: #1f2937;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 600;
-    margin-bottom: 32px;
+    margin: 0;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
+.last-updated {
+    display: flex;
+    align-items: center;
+    color: #6b7280;
+    font-size: 0.85rem;
+}
+
+.refresh-btn {
+    background: none;
+    border: none;
+    color: rgba(139, 92, 246, 0.9);
+    font-size: 1rem;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: transform 0.2s ease;
+}
+
+.refresh-btn:hover {
+    color: rgba(124, 58, 237, 0.9);
+    transform: rotate(30deg);
+}
+
+/* Loading and error states */
+.loading-container, .error-container {
+    padding: 2rem 0;
+}
+
+/* Dashboard main layout */
+.dashboard-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: auto;
+    overflow: visible;
+    padding-bottom: 20px;
+}
+
+/* Dashboard grid layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+    grid-auto-rows: auto;
+    gap: 20px;
+    overflow: visible;
+    align-items: start;
+}
+
+.dashboard-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-items: stretch;
+}
+
+/* Quick action buttons */
+.quick-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    background-color: white;
+    color: #4b5563;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #8b5cf6;
+}
+
+.quick-action-btn i {
+    font-size: 1rem;
+    color: #8b5cf6;
+}
+
+.quick-action-btn.primary {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%);
+    color: white;
+}
+
+.quick-action-btn.primary i {
+    color: white;
+}
+
+/* Stats grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
 }
 
 .stat-card {
     background: white;
-    padding: 24px;
+    padding: 14px;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(139, 92, 246, 0.8), rgba(99, 102, 241, 0.8));
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 14px;
+    flex-shrink: 0;
+}
+
+.stat-icon i {
+    font-size: 1.1rem;
+    color: #8b5cf6;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-content {
+    flex: 1;
 }
 
 .stat-card h3 {
     color: #4b5563;
-    font-size: 1rem;
+    font-size: 0.8rem;
     font-weight: 500;
-    margin: 0 0 12px 0;
+    margin: 0 0 4px 0;
 }
 
 .stat-number {
     color: #1f2937;
-    font-size: 2rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 2px 0;
+}
+
+.stat-trend, .stat-context {
+    font-size: 0.7rem;
+}
+
+.stat-trend.positive {
+    color: rgba(16, 185, 129, 0.85);
+}
+
+.stat-trend.negative {
+    color: rgba(239, 68, 68, 0.85);
+}
+
+.normal-result {
+    color: rgba(16, 185, 129, 0.85);
+}
+
+.abnormal-result {
+    color: rgba(239, 68, 68, 0.85);
+}
+
+/* Highlight one stat card with gradient background */
+.stat-card.highlight {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2);
+}
+
+.stat-card.highlight::before {
+    display: none; /* Hide the left border gradient */
+}
+
+.stat-card.highlight h3,
+.stat-card.highlight .stat-number,
+.stat-card.highlight .stat-context,
+.stat-card.highlight .stat-trend {
+    color: white;
+}
+
+.stat-card.highlight .stat-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-card.highlight .stat-icon i {
+    color: white;
+    background: none;
+    -webkit-background-clip: initial;
+    -webkit-text-fill-color: initial;
+    background-clip: initial;
+}
+
+.stat-card.highlight .normal-result,
+.stat-card.highlight .abnormal-result {
+    color: white;
+}
+
+/* Chart Card Styling */
+.chart-card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: auto;
+    min-height: 250px;
+    max-height: 350px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.highlight-card {
+    background: linear-gradient(to right, rgba(139, 92, 246, 0.04), rgba(139, 92, 246, 0.01));
+    border-left: 4px solid rgba(139, 92, 246, 0.8);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.chart-title {
+    color: #1f2937;
+    font-size: 0.95rem;
     font-weight: 600;
     margin: 0;
+}
+
+.view-all-link {
+    color: rgba(139, 92, 246, 0.9);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.view-all-link:hover {
+    color: rgba(124, 58, 237, 1);
+}
+
+.view-all-link i {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+
+.view-all-link:hover i {
+    transform: translateX(3px);
+}
+
+/* Legend Pills */
+.legend-pills {
+    display: flex;
+    gap: 6px;
+}
+
+.legend-pill {
+    padding: 3px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.legend-pill.normal {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: rgba(16, 185, 129, 0.85);
+}
+
+.legend-pill.abnormal {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: rgba(239, 68, 68, 0.85);
+}
+
+.legend-pill.pending {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: rgba(245, 158, 11, 0.85);
+}
+
+/* Recent Analyses Section */
+.recent-analyses-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-height: 250px;
+    overflow: auto;
+}
+
+.recent-analyses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.recent-analyses-list.scrollable {
+    max-height: 230px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.recent-analyses-list.scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+
+.recent-analyses-list.scrollable::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.recent-analyses-list.scrollable::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.recent-analyses-list.scrollable::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.recent-analysis-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.recent-analysis-item:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transform: translateX(2px);
+}
+
+.analysis-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #f3f4f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.analysis-icon.normal {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: rgba(16, 185, 129, 0.85);
+}
+
+.analysis-icon.abnormal {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: rgba(239, 68, 68, 0.85);
+}
+
+.analysis-icon.pending {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: rgba(245, 158, 11, 0.85);
+}
+
+.analysis-icon i {
+    font-size: 0.9rem;
+}
+
+.analysis-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.analysis-details h5 {
+    margin: 0 0 2px 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.analysis-details p {
+    margin: 0 0 2px 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.analysis-time {
+    font-size: 0.7rem;
+    color: #9ca3af;
+}
+
+.analysis-action {
+    margin-left: auto;
+}
+
+.view-details-btn {
+    background: none;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(139, 92, 246, 0.9);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-details-btn:hover {
+    background-color: rgba(139, 92, 246, 0.08);
+}
+
+/* Chart containers */
+.chart-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    position: relative;
+    min-height: 0;
+    width: 100%;
+}
+
+/* Ensure charts have consistent height */
+.main-column .chart-card:first-child {
+    min-height: 250px;
+    max-height: 300px;
+    height: auto;
+}
+
+/* Make age distribution chart taller and align left */
+.main-column .chart-card:last-child .chart-container {
+    max-height: 270px;
+    display: flex;
+    justify-content: flex-start;
+    padding-left: 20px; 
+    /* Add some left padding for better alignment */
+    width: 80%; /* Ensure full width */
+}
+
+/* Set specific height for age distribution chart canvas */
+.main-column .chart-card:last-child .chart-container canvas {
+    max-height: 270px !important;
+    height: 270px !important;
+    width: 80% !important; /* Make it wider */
+    max-width: 98% !important;
+    /* Use more width since we don't need space for legend */
+}
+
+/* Make donut chart smaller */
+.side-column .chart-card:first-child {
+    height: 250px;
+    min-height: 250px;
+    max-height: 250px;
+}
+
+/* Make the Results by Age chart taller and wider too */
+.side-column .chart-card:last-child .chart-container {
+    max-height: 250px;
+    padding-bottom: 20px;
+    
+}
+
+/* Set specific height and width for Results by Age chart canvas */
+.side-column .chart-card:last-child .chart-container canvas {
+    max-height: 270px !important;
+    height: 270px !important;
+    
+   
+}
+
+/* Ensure the charts scale properly */
+.chart-container canvas {
+    max-width: 100%;
+    max-height: 200px !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Make the donut chart container smaller */
+.side-column .chart-card:first-child .chart-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    max-height: 200px;
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .quick-actions {
+        flex-wrap: wrap;
+    }
+    
+    .quick-action-btn {
+        flex: 1;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: auto;
+    }
+    
+    .chart-card {
+        max-height: 300px;
+    }
+    
+    .chart-container {
+        max-height: 200px;
+    }
+    
+    .chart-container canvas {
+        max-height: 180px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .last-updated {
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+    }
+}
+
+/* Results Ratio visualization */
+.ratio-visualization {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.ratio-bars {
+    display: flex;
+    height: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+
+.ratio-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: white;
+    transition: width 0.5s ease;
+    min-width: 24px;
+}
+
+.ratio-bar.normal {
+    background: rgba(16, 185, 129, 0.8);
+}
+
+.ratio-bar.abnormal {
+    background: rgba(239, 68, 68, 0.8);
+}
+
+.ratio-legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot.normal {
+    background-color: rgba(16, 185, 129, 0.85);
+}
+
+.dot.abnormal {
+    background-color: rgba(239, 68, 68, 0.85);
+}
+
+/* Adjust highlight card for ratio visualization */
+.stat-card.highlight .stat-content {
+    width: 100%;
+}
+
+.stat-card.highlight .text {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Analysis Table Styles */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    background-color: white;
+    border-radius: 8px;
+    flex: 1;
+    max-height: 220px;
+}
+
+.analysis-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.85rem;
+}
+
+.analysis-table thead tr {
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.analysis-table th {
+    text-align: left;
+    padding: 0.85rem 1rem;
+    font-weight: 600;
+    color: #4b5563;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.analysis-table th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.analysis-table th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.analysis-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #1f2937;
+    white-space: nowrap;
+}
+
+.analysis-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.analysis-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.analysis-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.analysis-status.normal {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: rgba(16, 185, 129, 0.85);
+}
+
+.analysis-status.abnormal {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: rgba(239, 68, 68, 0.85);
+}
+
+.analysis-status.pending {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: rgba(245, 158, 11, 0.85);
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-action.view {
+    background-color: rgba(139, 92, 246, 0.1);
+    color: rgba(139, 92, 246, 0.9);
+    margin-right: 0.25rem;
+}
+
+.btn-action.view:hover {
+    background-color: rgba(139, 92, 246, 0.15);
+}
+
+.btn-action i {
+    margin-right: 0.25rem;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+.empty-state-icon {
+    width: 60px;
+    height: 60px;
+    background-color: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.empty-state-icon i {
+    font-size: 1.5rem;
+    color: #9ca3af;
+}
+
+.empty-state h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.patient-name-link {
+    cursor: pointer;
+    color: rgba(139, 92, 246, 0.9);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.patient-name-link:hover {
+    color: rgba(124, 58, 237, 1);
+    text-decoration: underline;
+}
+
+/* Adjust the Recent Analyses container for the table */
+.recent-analyses-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-height: 250px;
+    overflow: auto;
+}
+
+/* Make the Recent Analyses card match other chart cards */
+.main-column .chart-card:first-child {
+    min-height: 250px;
+    max-height: 300px;
+    height: auto;
+}
+
+/* Responsive adjustments for the analysis table */
+@media (max-width: 768px) {
+    .analysis-table th, 
+    .analysis-table td {
+        padding: 0.7rem 0.5rem;
+    }
+    
+    .btn-action.view {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .analysis-table {
+        font-size: 0.75rem;
+    }
 }

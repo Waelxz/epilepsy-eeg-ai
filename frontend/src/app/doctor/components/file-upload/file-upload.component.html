@@ -1,0 +1,120 @@
+<div class="file-upload-container">
+    <div class="upload-header">
+        <h2>Upload EEG Recording</h2>
+        <p>Upload an EEG data file (.txt or .edf) for analysis</p>
+    </div>
+    
+    <!-- Patient Info Card -->
+    <div class="patient-info-card" *ngIf="patient">
+        <div class="patient-header">
+            <div class="patient-name">
+                <h3>{{ patient.firstName }} {{ patient.lastName }}</h3>
+                <span class="patient-id">{{ patient.patientId }}</span>
+            </div>
+            <div class="patient-badge" [ngClass]="getPatientStatusClass(patient)">
+                {{ getPatientStatusLabel(patient) }}
+            </div>
+        </div>
+        
+        <div class="patient-details">
+            <div class="detail-item">
+                <span class="detail-label">Gender</span>
+                <span class="detail-value">{{ patient.gender }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Age</span>
+                <span class="detail-value">{{ calculateAge(patient.dateOfBirth) }} yrs</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Date of Birth</span>
+                <span class="detail-value">{{ formatDate(patient.dateOfBirth) }}</span>
+            </div>
+            <div class="detail-item" *ngIf="patient.analysisStatus && patient.analysisStatus.hasAnalysis">
+                <span class="detail-label">Prior Analyses</span>
+                <span class="detail-value">{{ patient.analysisStatus.totalAnalysisCount }}</span>
+            </div>
+        </div>
+        
+        <div class="patient-info-divider"></div>
+    </div>
+    
+    <!-- Patient loading -->
+    <div class="patient-loading" *ngIf="patientLoading">
+        <div class="spinner small"></div>
+        <span>Loading patient information...</span>
+    </div>
+    
+    <!-- Patient error -->
+    <div class="patient-error" *ngIf="patientError">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>{{ patientError }}</span>
+    </div>
+    
+    <!-- File Upload Area -->
+    <div *ngIf="!file">
+        <div 
+            class="dropzone" 
+            [class.active]="isDragging"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onFileDropped($event)">
+            
+            <div class="dropzone-content">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Drag & Drop EEG File Here</h3>
+                <p>or</p>
+                <label class="file-input-label">
+                    <span>Browse Files</span>
+                    <input type="file" class="file-input" (change)="onFileInputChange($event)" accept=".txt,.edf">
+                </label>
+                <p class="file-format">Supports .txt and .edf files up to 50MB</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Selected File Preview -->
+    <div class="file-preview" *ngIf="file">
+        <div class="file-info">
+            <div class="file-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="file-details">
+                <h3 class="file-name">{{ file.name }}</h3>
+                <p class="file-meta">{{ formatFileSize(file.size) }} • {{ file.lastModified | date:'medium' }}</p>
+            </div>
+            <button class="btn-icon" (click)="clearFile()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="file-actions">
+            <p class="helper-text">Please verify this is the correct EEG recording file before proceeding.</p>
+        </div>
+    </div>
+    
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{{ errorMessage }}</span>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button 
+            class="btn-secondary" 
+            [disabled]="!file || isSubmitting"
+            (click)="saveAsPending()">
+            <i class="fas fa-save" *ngIf="!isSubmitting"></i>
+            <div class="spinner-small" *ngIf="isSubmitting"></div>
+            Save as Pending
+        </button>
+        <button 
+            class="btn-primary" 
+            [disabled]="!file || isSubmitting"
+            (click)="confirmSelection()">
+            <i class="fas fa-play" *ngIf="!isSubmitting"></i>
+            <div class="spinner-small" *ngIf="isSubmitting"></div>
+            Start Analysis
+        </button>
+    </div>
+</div>

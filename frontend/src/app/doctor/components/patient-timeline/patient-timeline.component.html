@@ -1,0 +1,84 @@
+<div class="timeline-container">
+    <div class="timeline-header">
+        <h2>Patient Timeline</h2>
+        <div class="filter-controls">
+            <span class="filter-label">Filter:</span>
+            <button 
+                class="filter-btn" 
+                [class.active]="activeFilters['analysis']" 
+                (click)="toggleFilter('analysis')">
+                <i class="fas fa-chart-line"></i> Analyses
+            </button>
+            <button 
+                class="filter-btn" 
+                [class.active]="activeFilters['report']" 
+                (click)="toggleFilter('report')">
+                <i class="fas fa-file-medical-alt"></i> Reports
+            </button>
+            <button 
+                class="filter-btn" 
+                [class.active]="activeFilters['medication']" 
+                (click)="toggleFilter('medication')">
+                <i class="fas fa-pills"></i> Medications
+            </button>
+            <button 
+                class="filter-btn" 
+                [class.active]="activeFilters['note']" 
+                (click)="toggleFilter('note')">
+                <i class="fas fa-sticky-note"></i> Notes
+            </button>
+        </div>
+    </div>
+    
+    <!-- Empty state if no events -->
+    <div class="empty-state" *ngIf="filteredEvents.length === 0">
+        <i class="fas fa-history"></i>
+        <p>No timeline events found for this patient.</p>
+        <p class="hint" *ngIf="timelineEvents.length > 0">Try changing your filter settings.</p>
+    </div>
+    
+    <!-- Timeline -->
+    <div class="timeline" *ngIf="filteredEvents.length > 0">
+        <div class="timeline-event" *ngFor="let event of filteredEvents; let isFirst = first; let isLast = last">
+            <!-- Date indicator for the first event or when date changes -->
+            <div class="timeline-date" *ngIf="isFirst || formatDate(event.date).split(',')[0] !== formatDate(filteredEvents[filteredEvents.indexOf(event) - 1].date).split(',')[0]">
+                <span>{{ formatDate(event.date).split(',')[0] }}</span>
+            </div>
+            
+            <div class="timeline-event-content" [ngClass]="getEventStatusClass(event)">
+                <div class="event-time">{{ formatDate(event.date).split(',')[1] }}</div>
+                <div class="event-icon">
+                    <i class="fas {{ event.icon }}"></i>
+                </div>
+                <div class="event-details">
+                    <div class="event-header">
+                        <h3>{{ event.title }}</h3>
+                        <span class="event-status" *ngIf="event.status">{{ event.status | titlecase }}</span>
+                    </div>
+                    <p class="event-description">{{ event.description }}</p>
+                    
+                    <!-- Analysis-specific content -->
+                    <div class="event-result" *ngIf="event.eventType === 'analysis' && event.data?.result">
+                        <div class="result-item">
+                            <span>Status: </span>
+                            <span [ngClass]="{'text-danger': event.data.result.class === 0, 'text-success': event.data.result.class === 1}">
+                                {{ getStatusLabel(event.data) }}
+                            </span>
+                        </div>
+                        <div class="result-item">
+                            <span>Classification: </span>
+                            <span>{{ getTechnicalClassification(event.data) }}</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Confidence: </span>
+                            <span>{{ (event.data.result.probability * 100).toFixed(1) }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Connector line -->
+            <div class="timeline-connector" *ngIf="!isLast"></div>
+        </div>
+    </div>
+</div>

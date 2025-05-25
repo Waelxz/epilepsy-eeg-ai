@@ -1,0 +1,297 @@
+<div class="analysis-details-container">
+  <!-- Back button and header -->
+  <div class="header-container">
+    <button class="btn-back" (click)="returnToPatient()">
+      <i class="fas fa-arrow-left"></i> Back to Patient
+    </button>
+    <h1 class="page-title">Analysis Details 
+      <span class="analysis-date" *ngIf="analysis?.uploadDate">{{ formatUploadDate() }}</span>
+    </h1>
+    <div class="status-badge" *ngIf="analysis && analysis.result" [ngClass]="getAnalysisStatusClass(analysis.result)">
+      {{ getAnalysisStatusLabel(analysis.result) }}
+    </div>
+  </div>
+
+  <!-- Loading spinner -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading analysis details...</p>
+  </div>
+
+  <!-- Error message -->
+  <div class="error-container" *ngIf="errorMessage">
+    <div class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>{{ errorMessage }}</p>
+    </div>
+    <button class="btn-retry" (click)="loadAnalysis()">Retry</button>
+  </div>
+
+  <!-- Main content area -->
+  <div class="content-container" *ngIf="!isLoading && !errorMessage && analysis">
+    
+    <!-- Featured EEG Visualization at top -->
+    <div class="eeg-visualization-panel">
+      <div class="panel-header">
+        <h2><i class="fas fa-chart-line"></i> EEG Signal Visualization</h2>
+        <div class="channel-selector">
+          <span class="channel-label">Channel:</span>
+          <div class="channel-tabs">
+            <button 
+              *ngFor="let channel of channelNames; let i = index"
+              [class.active]="selectedChannel === i"
+              (click)="changeChannel(i)"
+              [disabled]="isLoadingEEG"
+            >
+              {{ channel }}
+            </button>
+          </div>
+      </div>
+        <div class="visualization-controls">
+          <button class="btn-control" (click)="loadEEGData()" title="Refresh visualization">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          <button class="btn-control" (click)="resetZoom()" title="Reset zoom">
+            <i class="fas fa-search-minus"></i>
+          </button>
+          <button class="btn-control" (click)="toggleFullscreen()" title="Toggle fullscreen">
+            <i class="fas fa-expand"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="visualization-container">
+        <!-- Loading state -->
+        <div class="eeg-loading" *ngIf="isLoadingEEG">
+          <div class="spinner"></div>
+          <p>Loading EEG data...</p>
+        </div>
+        
+        <!-- Error state -->
+        <div class="eeg-error" *ngIf="eegLoadError && !isLoadingEEG">
+          <p>{{ eegLoadError }}</p>
+        </div>
+        
+        <!-- Actual chart -->
+        <div class="eeg-chart-container" [class.hidden]="isLoadingEEG">
+          <canvas #eegCanvas></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patient and analysis info cards -->
+    <div class="info-cards">
+      <!-- Left column -->
+      <div class="left-column">
+        <!-- Patient info card -->
+        <div class="patient-info-card card">
+          <div class="card-header">
+            <h2><i class="fas fa-user"></i> Patient Information</h2>
+          </div>
+          <div class="card-content" *ngIf="patient">
+            <div class="compact-info-grid">
+              <div class="compact-info-item">
+                <label>Name</label>
+                <p>{{ getPatientFullName() }}</p>
+              </div>
+              <div class="compact-info-item">
+                <label>Patient ID</label>
+                <p>{{ patient.patientId }}</p>
+              </div>
+              <div class="compact-info-item">
+                <label>Date of Birth</label>
+                <p>{{ patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'N/A' }}</p>
+              </div>
+              <div class="compact-info-item">
+                <label>Age</label>
+                <p>{{ calculateAge(patient.dateOfBirth) }} years</p>
+              </div>
+              <div class="compact-info-item">
+                <label>Gender</label>
+                <p>{{ patient.gender || 'Not specified' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Model info card -->
+        <div class="model-info-card card">
+          <div class="card-header">
+            <h2><i class="fas fa-robot"></i> Model Information</h2>
+          </div>
+          <div class="card-content">
+            <div class="model-detail">
+              <h3>{{ analysis.modelUsed }}</h3>
+              <div class="model-badges">
+                <span class="model-badge">Deep Learning</span>
+                <span class="model-badge">CNN Architecture</span>
+              </div>
+              <p class="model-description">
+                This model classifies EEG signals from text files into focal or non-focal categories to assist in epilepsy diagnosis. 
+                <strong>Disclaimer:</strong> The classification results are not always accurate and should be reviewed by a qualified medical professional.
+              </p>
+              
+              <!-- Model Performance Metrics - moved from tabs -->
+              <div class="model-metrics" *ngIf="analysis.result?.metrics">
+                <h4>Model Performance Metrics</h4>
+                <div class="metrics-grid">
+                  <div class="metric-item">
+                    <div class="metric-label">Accuracy:</div>
+                    <div class="metric-value">{{ getMetricValue(analysis.result?.metrics?.accuracy) }}</div>
+                  </div>
+                  <div class="metric-item">
+                    <div class="metric-label">Precision:</div>
+                    <div class="metric-value">{{ getMetricValue(analysis.result?.metrics?.precision) }}</div>
+                  </div>
+                  <div class="metric-item">
+                    <div class="metric-label">Recall:</div>
+                    <div class="metric-value">{{ getMetricValue(analysis.result?.metrics?.recall) }}</div>
+                  </div>
+                  <div class="metric-item">
+                    <div class="metric-label">Specificity:</div>
+                    <div class="metric-value">{{ getMetricValue(analysis.result?.metrics?.specificity) }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis summary card -->
+      <div class="analysis-summary-card card">
+        <div class="card-header">
+          <h2><i class="fas fa-brain"></i> Analysis Results</h2>
+        <div class="status-badge" [ngClass]="getAnalysisStatusClass(analysis.result)">
+          {{ getAnalysisStatusLabel(analysis.result) }}
+        </div>
+      </div>
+
+        <div class="card-content">
+          <!-- Results section - priority content -->
+          <div class="result-section" *ngIf="analysis.result">
+            <div class="result-stats">
+              <div class="result-stat-item" [ngClass]="getAnalysisStatusClass(analysis.result)">
+                <div class="stat-label">Clinical Status</div>
+                <div class="stat-value">{{ getAnalysisStatusLabel(analysis.result) }}</div>
+              </div>
+              <div class="result-stat-item" [ngClass]="getAnalysisStatusClass(analysis.result)">
+                <div class="stat-label">Classification</div>
+                <div class="stat-value">{{ getTechnicalClassification(analysis.result) }}</div>
+              </div>
+              <div class="result-stat-item confidence">
+                <div class="stat-label">Confidence</div>
+                <div class="stat-value">
+                  <div class="confidence-bar-container">
+                    <div class="confidence-bar" [style.width.%]="analysis.result.probability * 100"></div>
+                  </div>
+                  <span>{{ (analysis.result.probability * 100).toFixed(2) }}%</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="interpretation-box">
+              <h4>Clinical Interpretation</h4>
+              <p>{{ analysis.result.interpretation || 'No interpretation available.' }}</p>
+            </div>
+          </div>
+
+          <!-- File Details - less important, moved to bottom -->
+          <div class="file-details-section">
+            <h3>File Details</h3>
+            <div class="compact-info-grid">
+              <div class="compact-info-item">
+                <label>File Name</label>
+                <p>{{ analysis.fileName }}</p>
+              </div>
+              <div class="compact-info-item">
+                <label>File Size</label>
+                <p>{{ formatFileSize(analysis.fileSize || 0) }}</p>
+              </div>
+              <div class="compact-info-item">
+                <label>Upload Date</label>
+                <p>{{ formatUploadDate() }}</p>
+              </div>
+              <div class="compact-info-item">
+                <label>Process Time</label>
+                <p>{{ getProcessingTime() }}</p>
+        </div>
+        </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes Section -->
+    <div class="notes-section">
+      <div class="notes-header">
+        <h3><i class="fas fa-sticky-note"></i> Analysis Notes</h3>
+        <button *ngIf="!isEditingNotes && !analysis?.notes" class="btn-add-note" (click)="startEditingNotes()">
+          <i class="fas fa-plus"></i> Add Note
+        </button>
+        <button *ngIf="!isEditingNotes && analysis?.notes" class="btn-edit-note" (click)="startEditingNotes()">
+          <i class="fas fa-edit"></i> Edit
+        </button>
+      </div>
+      
+      <div *ngIf="!isEditingNotes && analysis?.notes" class="notes-content">
+        <p>{{ analysis.notes }}</p>
+      </div>
+
+      <div *ngIf="!isEditingNotes && !analysis?.notes" class="notes-empty">
+        <p>No notes added for this analysis yet.</p>
+        </div>
+      
+      <div *ngIf="isEditingNotes" class="notes-editor">
+        <textarea 
+          [(ngModel)]="notesContent" 
+          placeholder="Enter analysis notes..." 
+          rows="4"
+          class="notes-textarea">
+        </textarea>
+        <div class="notes-actions">
+          <button class="btn-save-note" (click)="saveNotes()">
+            <i class="fas fa-save"></i> Save
+          </button>
+          <button class="btn-cancel-note" (click)="cancelEditNotes()">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
+        </div>
+      </div>
+
+      <!-- Report buttons -->
+      <div class="report-actions">
+        <h3>Analysis Report</h3>
+        <div class="button-group">
+          <!-- Show Generate button if no report exists -->
+          <button class="btn-report" *ngIf="!existingReport && !isGeneratingReport" (click)="generateReport('analysis')">
+            <i class="fas fa-file-medical-alt"></i>
+            Generate Analysis Report
+          </button>
+          
+          <!-- Show Download and Regenerate buttons if report exists -->
+          <div class="existing-report-actions" *ngIf="existingReport && !isGeneratingReport">
+            <button class="btn-report" (click)="downloadExistingReport()">
+              <i class="fas fa-download"></i>
+              Download Report
+            </button>
+            <button class="btn-secondary" (click)="regenerateReport()">
+              <i class="fas fa-sync-alt"></i>
+              Regenerate
+            </button>
+          </div>
+        </div>
+        <div class="generating-indicator" *ngIf="isGeneratingReport">
+          <div class="spinner-small"></div>
+          <p>Generating report...</p>
+        </div>
+        
+        <!-- Report generation date if report exists -->
+        <div class="report-info" *ngIf="existingReport">
+          <p><i class="fas fa-info-circle"></i> Report generated on {{ existingReport.generatedDate ? formatDate(existingReport.generatedDate) : 'Unknown date' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+

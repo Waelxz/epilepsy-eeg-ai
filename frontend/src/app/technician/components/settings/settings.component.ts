@@ -7,7 +7,7 @@ import { Subscription, filter } from 'rxjs';
 import { Location } from '@angular/common';
 
 @Component({
-  selector: 'app-settings',
+  selector: 'app-technician-settings',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
   templateUrl: './settings.component.html',

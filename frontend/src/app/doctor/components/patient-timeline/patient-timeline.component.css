@@ -1,0 +1,253 @@
+.timeline-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    padding: 1.5rem;
+    font-family: inherit;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.timeline-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-color, #1a1a1a);
+}
+
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-label {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color, #6b7280);
+    margin-right: 5px;
+}
+
+.filter-btn {
+    background-color: #f3f4f6;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    color: #6b7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background-color: #e5e7eb;
+}
+
+.filter-btn.active {
+    background-color: #8b5cf6;
+    color: white;
+}
+
+.filter-btn i {
+    font-size: 0.9rem;
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding: 15px 0;
+}
+
+.timeline-event {
+    position: relative;
+    margin-bottom: 25px;
+    padding-left: 40px;
+}
+
+.timeline-date {
+    margin-bottom: 15px;
+    margin-left: -10px;
+}
+
+.timeline-date span {
+    background-color: #f3f4f6;
+    border-radius: 15px;
+    padding: 5px 15px;
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.timeline-event-content {
+    display: flex;
+    background-color: #f9fafb;
+    border-left: 4px solid #8b5cf6;
+    border-radius: 0 8px 8px 0;
+    padding: 15px;
+    position: relative;
+}
+
+.timeline-event-content.status-abnormal {
+    border-left-color: #ef4444;
+}
+
+.timeline-event-content.status-normal {
+    border-left-color: #10b981;
+}
+
+.timeline-event-content.status-pending {
+    border-left-color: #f59e0b;
+}
+
+.event-time {
+    position: absolute;
+    left: -85px;
+    top: 15px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    width: 70px;
+    text-align: right;
+}
+
+.event-icon {
+    background: #8b5cf6;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.event-details {
+    flex: 1;
+}
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.event-header h3 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+    color: var(--text-color, #1a1a1a);
+}
+
+.event-status {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background-color: #e5e7eb;
+    color: #6b7280;
+}
+
+.event-description {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color, #6b7280);
+    margin: 5px 0;
+}
+
+.event-result {
+    background-color: #f3f4f6;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.text-danger {
+    color: #ef4444;
+}
+
+.text-success {
+    color: #10b981;
+}
+
+.timeline-connector {
+    position: absolute;
+    left: 20px;
+    top: 65px;
+    height: calc(100% - 30px);
+    width: 2px;
+    background-color: #e5e7eb;
+    z-index: 0;
+}
+
+/* Empty state */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #e5e7eb;
+    margin-bottom: 15px;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    color: var(--secondary-text-color, #6b7280);
+    margin: 5px 0;
+}
+
+.hint {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .timeline-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-controls {
+        margin-top: 15px;
+        width: 100%;
+    }
+    
+    .timeline-event {
+        padding-left: 25px;
+    }
+    
+    .event-time {
+        position: relative;
+        left: 0;
+        top: 0;
+        margin-bottom: 5px;
+        text-align: left;
+    }
+    
+    .timeline-connector {
+        left: 12px;
+    }
+}

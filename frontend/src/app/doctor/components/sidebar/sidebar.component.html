@@ -1,23 +1,58 @@
 <div class="sidebar-container">
+    <div class="logo-container">
     <div class="logo">
-        <h1>Epilepsy App</h1>
+            <span class="logo-icon">
+                <i class="fas fa-brain"></i>
+            </span>
+            <h3 class="logo-text">Epilepsy App</h3>
+        </div>
     </div>
-    <nav class="nav-menu">
-        <a href="#" class="nav-item active">
-            <i class="fas fa-chart-line"></i>
+    
+    <nav class="nav-links">
+        <a [routerLink]="['/doctor/dashboard']" routerLinkActive="active" class="nav-link">
+            <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
         </a>
-        <a href="#" class="nav-item">
+        <a [routerLink]="['/doctor/patients']" routerLinkActive="active" class="nav-link">
             <i class="fas fa-users"></i>
             <span>Patients</span>
         </a>
-        <a href="#" class="nav-item">
+        <a [routerLink]="['/doctor/new-analysis']" routerLinkActive="active" class="nav-link">
+            <i class="fas fa-plus-circle"></i>
+            <span>New Analysis</span>
+        </a>
+        <a [routerLink]="['/doctor/analysis-history']" routerLinkActive="active" class="nav-link">
             <i class="fas fa-history"></i>
             <span>Analysis History</span>
         </a>
-        <a href="#" class="nav-item">
+        <a [routerLink]="['/doctor/reports']" routerLinkActive="active" class="nav-link">
+            <i class="fas fa-file-medical-alt"></i>
+            <span>Reports</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a [routerLink]="['/doctor/settings']" routerLinkActive="active" class="nav-link">
             <i class="fas fa-cog"></i>
             <span>Settings</span>
         </a>
-    </nav>
+        <a [routerLink]="['/doctor/help']" routerLinkActive="active" class="nav-link">
+            <i class="fas fa-question-circle"></i>
+            <span>Help</span>
+        </a>
+        <!-- Theme Toggle -->
+        <a class="nav-link theme-toggle" (click)="toggleTheme()">
+            <i [class]="isDarkMode ? 'fas fa-moon' : 'fas fa-sun'"></i>
+            <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
+        </a>
+        <!-- User Profile Info -->
+        <div class="nav-link user-info">
+            <i class="fas fa-user-md"></i>
+            <span class="doctor-name">{{ getUserFullName() }}</span>
+        </div>
+        <a (click)="logout()" class="nav-link logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </div>
 </div>

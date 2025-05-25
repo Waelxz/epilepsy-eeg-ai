@@ -1,0 +1,459 @@
+<div class="settings-container">
+  <div class="settings-header">
+    <h1 class="settings-title">Settings</h1>
+    <p class="settings-description">Configure your application preferences and account settings</p>
+  </div>
+
+  <div class="settings-content">
+    <!-- Settings navigation -->
+    <div class="settings-nav">
+      <ul class="nav-tabs">
+        <li class="nav-item" [class.active]="selectedTab === 'appearance'">
+          <a (click)="setActiveTab('appearance')" class="nav-link">
+            <i class="fas fa-palette"></i>
+            <span>Appearance</span>
+          </a>
+        </li>
+        <li class="nav-item" [class.active]="selectedTab === 'profile'">
+          <a (click)="setActiveTab('profile')" class="nav-link">
+            <i class="fas fa-user-md"></i>
+            <span>Profile</span>
+          </a>
+        </li>
+        <li class="nav-item" [class.active]="selectedTab === 'security'">
+          <a (click)="setActiveTab('security')" class="nav-link">
+            <i class="fas fa-shield-alt"></i>
+            <span>Security</span>
+          </a>
+        </li>
+        <li class="nav-item" [class.active]="selectedTab === 'notifications'">
+          <a (click)="setActiveTab('notifications')" class="nav-link">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Settings panels -->
+    <div class="settings-panels">
+      <!-- Appearance Settings Panel -->
+      <div class="settings-panel" *ngIf="selectedTab === 'appearance'">
+        <h2 class="panel-title">Appearance Settings</h2>
+        <form [formGroup]="settingsForm" class="settings-form">
+          <!-- Theme Selection -->
+          <div class="settings-group">
+            <h3 class="group-title">Theme</h3>
+            <p class="group-description">Choose the color theme for the application</p>
+            
+            <div class="theme-options">
+              <div *ngFor="let theme of themeOptions" class="theme-option">
+                <input type="radio" 
+                       [id]="'theme-' + theme.value" 
+                       formControlName="theme" 
+                       [value]="theme.value"
+                       class="theme-radio">
+                <label [for]="'theme-' + theme.value" class="theme-label">
+                  <div class="theme-preview" [class]="theme.value + '-preview'">
+                    <div class="preview-sidebar"></div>
+                    <div class="preview-content"></div>
+                  </div>
+                  <span>{{ theme.label }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Font Size -->
+          <div class="settings-group">
+            <h3 class="group-title">Font Size</h3>
+            <p class="group-description">Adjust the text size throughout the application</p>
+            
+            <div class="font-size-slider">
+              <div class="slider-labels">
+                <span class="small-text">A</span>
+                <span class="large-text">A</span>
+              </div>
+              <select formControlName="fontSize" class="form-control">
+                <option *ngFor="let size of fontSizeOptions" [value]="size.value">
+                  {{ size.label }}
+                </option>
+              </select>
+              <div class="font-preview" [style.fontSize.px]="settingsForm.get('fontSize')?.value">
+                This is a preview of your selected font size.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Accessibility Settings -->
+          <div class="settings-group">
+            <h3 class="group-title">Accessibility</h3>
+            <p class="group-description">Configure accessibility options</p>
+            
+            <div class="checkbox-option">
+              <input type="checkbox" 
+                     id="reduceAnimations" 
+                     formControlName="reduceAnimations">
+              <label for="reduceAnimations" class="checkbox-label">
+                <span class="option-title">Reduce animations</span>
+                <span class="option-description">Minimize motion effects throughout the application</span>
+              </label>
+            </div>
+            
+            <div class="checkbox-option">
+              <input type="checkbox" 
+                     id="highContrast" 
+                     formControlName="highContrast">
+              <label for="highContrast" class="checkbox-label">
+                <span class="option-title">High contrast</span>
+                <span class="option-description">Increase contrast for better readability (Light theme only)</span>
+              </label>
+            </div>
+            
+            <!-- Warning for dark mode + high contrast -->
+            <div class="high-contrast-note" *ngIf="settingsForm.get('highContrast')?.value && settingsForm.get('theme')?.value === 'dark'">
+              <i class="fas fa-exclamation-triangle"></i>
+              High contrast mode is only available with the Light theme. This setting will have no effect while Dark theme is active.
+            </div>
+          </div>
+          
+          <!-- Action buttons -->
+          <div class="settings-actions">
+            <button type="button" 
+                    class="btn btn-cancel" 
+                    (click)="discardAppearanceChanges()"
+                    [disabled]="!hasUnsavedChanges()">
+              Cancel
+            </button>
+            <button type="button" 
+                    class="btn btn-save" 
+                    (click)="saveAppearanceSettings()"
+                    [disabled]="isSaving || !hasUnsavedChanges()">
+              <span *ngIf="!isSaving">Save Changes</span>
+              <span *ngIf="isSaving">Saving...</span>
+            </button>
+          </div>
+          
+          <!-- Success/Error messages -->
+          <div class="settings-feedback" *ngIf="saveSuccess || saveError">
+            <div class="alert alert-success" *ngIf="saveSuccess">
+              <i class="fas fa-check-circle"></i>
+              Settings saved successfully
+            </div>
+            <div class="alert alert-danger" *ngIf="saveError">
+              <i class="fas fa-exclamation-circle"></i>
+              {{ saveError }}
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Profile Settings Panel -->
+      <div class="settings-panel" *ngIf="selectedTab === 'profile'">
+        <h2 class="panel-title">Profile Information</h2>
+        <p class="panel-description">Update your personal information</p>
+        
+        <div class="loading-state" *ngIf="isLoadingUser">
+          <div class="spinner"></div>
+          <p>Loading profile information...</p>
+        </div>
+        
+        <div class="error-state" *ngIf="userError">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Could not load your profile information. Please try refreshing the page.</p>
+        </div>
+        
+        <form [formGroup]="profileForm" class="settings-form" *ngIf="!isLoadingUser && !userError">
+          <!-- Basic Information -->
+          <div class="settings-group">
+            <h3 class="group-title">Basic Information</h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" 
+                       id="firstName" 
+                       formControlName="firstName" 
+                       class="form-control"
+                       [class.is-invalid]="hasError(profileForm, 'firstName', 'required')">
+                <div class="invalid-feedback" *ngIf="hasError(profileForm, 'firstName', 'required')">
+                  First name is required
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" 
+                       id="lastName" 
+                       formControlName="lastName" 
+                       class="form-control"
+                       [class.is-invalid]="hasError(profileForm, 'lastName', 'required')">
+                <div class="invalid-feedback" *ngIf="hasError(profileForm, 'lastName', 'required')">
+                  Last name is required
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" 
+                     id="email" 
+                     formControlName="email" 
+                     class="form-control"
+                     [class.is-invalid]="hasError(profileForm, 'email', 'required') || hasError(profileForm, 'email', 'email')">
+              <div class="invalid-feedback" *ngIf="hasError(profileForm, 'email', 'required')">
+                Email is required
+              </div>
+              <div class="invalid-feedback" *ngIf="hasError(profileForm, 'email', 'email')">
+                Please enter a valid email address
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" 
+                     id="phone" 
+                     formControlName="phone" 
+                     class="form-control">
+            </div>
+          </div>
+          
+          <!-- Professional Information -->
+          <div class="settings-group">
+            <h3 class="group-title">Professional Information</h3>
+            
+            <div class="form-group">
+              <label for="specialization">Specialization</label>
+              <input type="text" 
+                     id="specialization" 
+                     formControlName="specialization" 
+                     class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label for="hospital">Hospital / Institution</label>
+              <input type="text" 
+                     id="hospital" 
+                     formControlName="hospital" 
+                     class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label for="bio">Bio / About</label>
+              <textarea id="bio" 
+                        formControlName="bio" 
+                        class="form-control" 
+                        rows="4"></textarea>
+            </div>
+          </div>
+          
+          <!-- Action buttons -->
+          <div class="settings-actions">
+            <button type="button" 
+                    class="btn btn-cancel" 
+                    (click)="loadUserData()">
+              Cancel
+            </button>
+            <button type="button" 
+                    class="btn btn-save" 
+                    (click)="saveProfileSettings()"
+                    [disabled]="profileForm.invalid || isSaving">
+              <span *ngIf="!isSaving">Save Profile</span>
+              <span *ngIf="isSaving">Saving...</span>
+            </button>
+          </div>
+          
+          <!-- Success/Error messages -->
+          <div class="settings-feedback" *ngIf="saveSuccess || saveError">
+            <div class="alert alert-success" *ngIf="saveSuccess">
+              <i class="fas fa-check-circle"></i>
+              Profile saved successfully
+            </div>
+            <div class="alert alert-danger" *ngIf="saveError">
+              <i class="fas fa-exclamation-circle"></i>
+              {{ saveError }}
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Security Settings Panel -->
+      <div class="settings-panel" *ngIf="selectedTab === 'security'">
+        <h2 class="panel-title">Security Settings</h2>
+        <p class="panel-description">Change your password and manage security preferences</p>
+        
+        <form [formGroup]="securityForm" class="settings-form">
+          <!-- Password Change -->
+          <div class="settings-group">
+            <h3 class="group-title">Change Password</h3>
+            
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <input type="password" 
+                     id="currentPassword" 
+                     formControlName="currentPassword" 
+                     class="form-control"
+                     [class.is-invalid]="hasError(securityForm, 'currentPassword', 'required')">
+              <div class="invalid-feedback" *ngIf="hasError(securityForm, 'currentPassword', 'required')">
+                Current password is required
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <input type="password" 
+                     id="newPassword" 
+                     formControlName="newPassword" 
+                     class="form-control"
+                     [class.is-invalid]="hasError(securityForm, 'newPassword', 'required') || hasError(securityForm, 'newPassword', 'minlength')">
+              <div class="invalid-feedback" *ngIf="hasError(securityForm, 'newPassword', 'required')">
+                New password is required
+              </div>
+              <div class="invalid-feedback" *ngIf="hasError(securityForm, 'newPassword', 'minlength')">
+                Password must be at least 8 characters long
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="confirmPassword">Confirm New Password</label>
+              <input type="password" 
+                     id="confirmPassword" 
+                     formControlName="confirmPassword" 
+                     class="form-control"
+                     [class.is-invalid]="hasError(securityForm, 'confirmPassword', 'required') || securityForm.hasError('passwordMismatch')">
+              <div class="invalid-feedback" *ngIf="hasError(securityForm, 'confirmPassword', 'required')">
+                Please confirm your new password
+              </div>
+              <div class="invalid-feedback" *ngIf="securityForm.hasError('passwordMismatch')">
+                Passwords do not match
+              </div>
+            </div>
+          </div>
+          
+          <!-- Action buttons -->
+          <div class="settings-actions">
+            <button type="button" 
+                    class="btn btn-cancel" 
+                    (click)="securityForm.reset()">
+              Cancel
+            </button>
+            <button type="button" 
+                    class="btn btn-save" 
+                    (click)="saveSecuritySettings()"
+                    [disabled]="securityForm.invalid || isSaving">
+              <span *ngIf="!isSaving">Change Password</span>
+              <span *ngIf="isSaving">Saving...</span>
+            </button>
+          </div>
+          
+          <!-- Success/Error messages -->
+          <div class="settings-feedback" *ngIf="saveSuccess || saveError">
+            <div class="alert alert-success" *ngIf="saveSuccess">
+              <i class="fas fa-check-circle"></i>
+              Password changed successfully
+            </div>
+            <div class="alert alert-danger" *ngIf="saveError">
+              <i class="fas fa-exclamation-circle"></i>
+              {{ saveError }}
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Notifications Settings Panel -->
+      <div class="settings-panel" *ngIf="selectedTab === 'notifications'">
+        <h2 class="panel-title">Notification Preferences</h2>
+        <p class="panel-description">Configure how you receive notifications</p>
+        
+        <form [formGroup]="notificationForm" class="settings-form">
+          <div class="settings-group">
+            <h3 class="group-title">Email Notifications</h3>
+            
+            <div class="checkbox-option">
+              <input type="checkbox" 
+                     id="emailNotifications" 
+                     formControlName="emailNotifications">
+              <label for="emailNotifications" class="checkbox-label">
+                <span class="option-title">Enable email notifications</span>
+                <span class="option-description">Receive important notifications via email</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="settings-group">
+            <h3 class="group-title">Notification Categories</h3>
+            <p class="group-description">Select which types of notifications you'd like to receive</p>
+            
+            <div class="checkbox-option">
+              <input type="checkbox" 
+                     id="newPatientNotifications" 
+                     formControlName="newPatientNotifications">
+              <label for="newPatientNotifications" class="checkbox-label">
+                <span class="option-title">New patient registrations</span>
+                <span class="option-description">Receive notifications when new patients are added</span>
+              </label>
+            </div>
+            
+            <div class="checkbox-option">
+              <input type="checkbox" 
+                     id="analysisResultsNotifications" 
+                     formControlName="analysisResultsNotifications">
+              <label for="analysisResultsNotifications" class="checkbox-label">
+                <span class="option-title">Analysis results</span>
+                <span class="option-description">Receive notifications when analysis results are ready</span>
+              </label>
+            </div>
+            
+            <div class="checkbox-option">
+              <input type="checkbox" 
+                     id="appointmentReminders" 
+                     formControlName="appointmentReminders">
+              <label for="appointmentReminders" class="checkbox-label">
+                <span class="option-title">Appointment reminders</span>
+                <span class="option-description">Receive reminders about upcoming appointments</span>
+              </label>
+            </div>
+            
+            <div class="checkbox-option">
+              <input type="checkbox" 
+                     id="systemUpdates" 
+                     formControlName="systemUpdates">
+              <label for="systemUpdates" class="checkbox-label">
+                <span class="option-title">System updates</span>
+                <span class="option-description">Receive notifications about system updates and new features</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Action buttons -->
+          <div class="settings-actions">
+            <button type="button" 
+                    class="btn btn-cancel" 
+                    (click)="notificationForm.reset()">
+              Cancel
+            </button>
+            <button type="button" 
+                    class="btn btn-save" 
+                    (click)="saveNotificationSettings()"
+                    [disabled]="isSaving">
+              <span *ngIf="!isSaving">Save Preferences</span>
+              <span *ngIf="isSaving">Saving...</span>
+            </button>
+          </div>
+          
+          <!-- Success/Error messages -->
+          <div class="settings-feedback" *ngIf="saveSuccess || saveError">
+            <div class="alert alert-success" *ngIf="saveSuccess">
+              <i class="fas fa-check-circle"></i>
+              Notification preferences saved successfully
+            </div>
+            <div class="alert alert-danger" *ngIf="saveError">
+              <i class="fas fa-exclamation-circle"></i>
+              {{ saveError }}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

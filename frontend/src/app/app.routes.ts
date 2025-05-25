@@ -21,6 +21,16 @@ import { ProfileComponent as AdminProfileComponent } from './admin/components/pr
 import { SettingsComponent as AdminSettingsComponent } from './admin/components/settings/settings.component';
 import { ChangePasswordComponent as AdminChangePasswordComponent } from './admin/components/change-password/change-password.component';
 
+// Import Doctor module components
+import { DashboardContentComponent as DoctorDashboardContentComponent } from './doctor/components/dashboard-content/dashboard-content.component';
+import { PatientListComponent } from './doctor/components/patient-list/patient-list.component';
+import { PatientDetailsComponent } from './doctor/components/patient-details/patient-details.component';
+import { PatientCreateComponent } from './doctor/components/patient-create/patient-create.component';
+import { AnalysisNewComponent } from './doctor/components/analysis-new/analysis-new.component';
+import { AnalysisDetailsComponent } from './doctor/components/analysis-details/analysis-details.component';
+import { AnalysisHistoryComponent } from './doctor/components/analysis-history/analysis-history.component';
+import { ReportsListComponent } from './doctor/components/reports-list/reports-list.component';
+
 export const routes: Routes = [
   // Admin routes with role protection
   { 
@@ -42,7 +52,25 @@ export const routes: Routes = [
   },
   
   // Doctor routes with role protection
-  { path: 'doctor', component: DoctorDashboardComponent, canActivate: [AuthGuard], data: { role: 'doctor' } },
+  { 
+    path: 'doctor', 
+    component: DoctorDashboardComponent, 
+    canActivate: [AuthGuard], 
+    data: { role: 'doctor' },
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: DoctorDashboardContentComponent },
+      { path: 'patients', component: PatientListComponent },
+      { path: 'patients/new', redirectTo: 'patients', pathMatch: 'full' },
+      { path: 'patients/:id', component: PatientDetailsComponent },
+      { path: 'new-analysis', component: AnalysisNewComponent },
+      { path: 'analysis-history', component: AnalysisHistoryComponent },
+      { path: 'analysis/:id', component: AnalysisDetailsComponent },
+      { path: 'reports', component: ReportsListComponent },
+      { path: 'reports/:id', component: AnalysisDetailsComponent },
+      // More doctor routes will be added as we create components
+    ]
+  },
   
   // Technician routes with role protection
   { 

@@ -1,0 +1,133 @@
+<div class="new-analysis-container">
+    <div class="header">
+        <div class="title">
+            <h1>New EEG Analysis</h1>
+            <p>Upload and analyze EEG data for a patient</p>
+        </div>
+    </div>
+
+    <!-- Progress Stepper -->
+    <div class="stepper-container">
+        <div class="stepper">
+            <!-- Show only 2 steps if patient selection is skipped -->
+            <ng-container *ngIf="skipPatientSelection; else fullStepper">
+                <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Upload EEG File</div>
+                </div>
+                <div class="step-connector" [class.active]="currentStep > 2"></div>
+                <div class="step" [class.active]="currentStep === 3">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Analysis Summary</div>
+                </div>
+            </ng-container>
+            
+            <ng-template #fullStepper>
+                <div class="step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Select Patient</div>
+                </div>
+                <div class="step-connector" [class.active]="currentStep > 1"></div>
+                <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Upload EEG File</div>
+                </div>
+                <div class="step-connector" [class.active]="currentStep > 2"></div>
+                <div class="step" [class.active]="currentStep === 3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Analysis Summary</div>
+                </div>
+            </ng-template>
+        </div>
+    </div>
+
+    <!-- Step Content -->
+    <div class="step-content">
+        <!-- Patient Selection Step -->
+        <div *ngIf="currentStep === 1 && !skipPatientSelection" class="step-panel">
+            <!-- Patient Selection Choice Sub-step -->
+            <div *ngIf="patientSelectionSubStep === 'choice'" class="patient-choice-container">
+                <h2>Choose an Option</h2>
+                <p>To perform an EEG analysis, you need to select a patient first.</p>
+                
+                <div class="choice-cards">
+                    <div class="choice-card" (click)="selectPatientMode('select')">
+                        <div class="card-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <h3>Select Existing Patient</h3>
+                        <p>Choose from your existing patient records</p>
+                        <button class="btn-primary">Select Patient</button>
+                    </div>
+                    
+                    <div class="choice-card" (click)="selectPatientMode('create')">
+                        <div class="card-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h3>Create New Patient</h3>
+                        <p>Add a new patient to your records</p>
+                        <button class="btn-primary">Create Patient</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Patient Selection Sub-step -->
+            <div *ngIf="patientSelectionSubStep === 'select'">
+                <div class="sub-step-header">
+                    <button class="btn-back" (click)="backToPatientChoice()">
+                        <i class="fas fa-arrow-left"></i> Back to Options
+                    </button>
+                    <h2>Select Existing Patient</h2>
+                </div>
+                
+                <app-patient-selection 
+                    (patientSelected)="onPatientSelected($event)">
+                </app-patient-selection>
+            </div>
+        </div>
+        
+        <!-- File Upload Step -->
+        <div *ngIf="currentStep === 2" class="step-panel">
+            <app-file-upload 
+                [patientId]="patientId" 
+                (fileSelected)="onFileSelected($event)"
+                (pendingAnalysisCreated)="onPendingAnalysisCreated($event)">
+            </app-file-upload>
+        </div>
+        
+        <!-- Analysis Summary Step -->
+        <div *ngIf="currentStep === 3" class="step-panel">
+            <app-analysis-summary 
+                [patientId]="patientId" 
+                [file]="selectedFile"
+                (analysisComplete)="onAnalysisComplete($event)">
+            </app-analysis-summary>
+        </div>
+    </div>
+    
+    <!-- Navigation Buttons -->
+    <div class="step-navigation">
+        <button 
+            class="btn-secondary" 
+            *ngIf="(currentStep > 1 && !(currentStep === 1 && skipPatientSelection)) || (currentStep === 1 && patientSelectionSubStep === 'select')"
+            (click)="currentStep === 1 ? backToPatientChoice() : prevStep()">
+            <i class="fas fa-chevron-left"></i> Back
+        </button>
+        
+        <button 
+            class="btn-secondary" 
+            (click)="cancelAnalysis()"
+            *ngIf="!overlayMode">
+            Cancel
+        </button>
+        
+        <!-- Next button is handled by the child components through events -->
+    </div>
+</div>
+
+<!-- Patient Create Modal -->
+<app-patient-create 
+    *ngIf="showCreatePatientModal"
+    (closeOverlay)="closeCreatePatientModal()"
+    (patientCreated)="onPatientCreated($event)">
+</app-patient-create>
