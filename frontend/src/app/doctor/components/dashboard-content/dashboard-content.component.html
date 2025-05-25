@@ -1,6 +1,6 @@
 <div class="dashboard-content-container">
     <div class="dashboard-header">
-        <h1 class="welcome-message">Welcome back, {{ currentUserName }}</h1>
+        <h1 class="welcome-message">Welcome back, Dr. {{ currentUserName.firstName }} {{ currentUserName.lastName }} </h1>
         <div class="last-updated" *ngIf="!isLoading">
             <span>Last updated: {{getCurrentTime()}}</span>
             <button class="refresh-btn" (click)="loadSummaryData()">

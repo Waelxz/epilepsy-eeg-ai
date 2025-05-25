@@ -20,6 +20,28 @@ import { AnalysisHistoryComponent } from './components/analysis-history/analysis
 import { PatientService } from '../shared/services/patient.service';
 import { AnalysisService } from '../shared/services/analysis.service';
 
+// Function to prepare doctor-specific dark theme styles
+export function prepareDoctorDarkTheme() {
+  if (typeof document !== 'undefined') {  // Check if in browser environment
+    // Add doctor-module class to enable scoping
+    document.body.classList.add('doctor-module');
+    
+    // Check if we should apply the doctor dark theme based on saved preference
+    const isDoctorDarkMode = localStorage.getItem('doctor_dark_mode') === 'true';
+    if (isDoctorDarkMode) {
+      document.body.classList.add('theme-dark');
+      // Pre-load the theme CSS
+      if (!document.getElementById('doctor-dark-theme-styles')) {
+        const styleEl = document.createElement('link');
+        styleEl.id = 'doctor-dark-theme-styles';
+        styleEl.rel = 'stylesheet';
+        styleEl.href = 'assets/doctor-dark-theme.css';
+        document.head.appendChild(styleEl);
+      }
+    }
+  }
+}
+
 @NgModule({
   imports: [
     CommonModule,
@@ -40,4 +62,9 @@ import { AnalysisService } from '../shared/services/analysis.service';
   ],
   providers: [PatientService, AnalysisService]
 })
-export class DoctorModule { } 
+export class DoctorModule { 
+  constructor() {
+    // Prepare for doctor-specific dark theme (but don't force it)
+    prepareDoctorDarkTheme();
+  }
+} 

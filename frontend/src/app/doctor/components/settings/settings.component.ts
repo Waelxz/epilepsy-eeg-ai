@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormGroup, FormBuilder, Validators } 
 import { AppSettingsService, AppSettings } from '../../../shared/services/app-settings.service';
 import { UserService } from '../../../shared/services/user.service';
 import { AuthService } from '../../../auth/auth.service';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-settings',
@@ -13,7 +14,8 @@ import { AuthService } from '../../../auth/auth.service';
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    RouterModule
   ]
 })
 export class SettingsComponent implements OnInit {
@@ -51,7 +53,8 @@ export class SettingsComponent implements OnInit {
     private appSettingsService: AppSettingsService,
     private formBuilder: FormBuilder,
     private userService: UserService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {
     // Get current settings
     this.settings = this.appSettingsService.getSettings();
@@ -207,7 +210,7 @@ export class SettingsComponent implements OnInit {
     
     const profileData = this.profileForm.value;
     
-    this.userService.updateUserProfile(profileData).subscribe({
+    this.userService.updateCurrentUserProfile(profileData).subscribe({
       next: (response) => {
         this.isSaving = false;
         this.saveSuccess = true;
@@ -264,7 +267,12 @@ export class SettingsComponent implements OnInit {
     
     const notificationSettings = this.notificationForm.value;
     
-    this.userService.updateNotificationSettings(notificationSettings).subscribe({
+    // Format notification settings for the API
+    const updateData = {
+      notification_preferences: notificationSettings
+    };
+    
+    this.userService.updateCurrentUserProfile(updateData).subscribe({
       next: (response) => {
         this.isSaving = false;
         this.saveSuccess = true;
@@ -302,5 +310,10 @@ export class SettingsComponent implements OnInit {
   // Check if user has unsaved changes
   hasUnsavedChanges(): boolean {
     return this.appSettingsService.hasUnsavedChanges();
+  }
+  
+  // Add navigation method
+  navigateToProfile(): void {
+    this.router.navigate(['/doctor/profile']);
   }
 }

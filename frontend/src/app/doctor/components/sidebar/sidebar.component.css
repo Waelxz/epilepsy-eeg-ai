@@ -98,6 +98,35 @@
     color: #8b5cf6;
 }
 
+/* Doctor theme toggle - special styling */
+.nav-link.doctor-theme {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(to right, rgba(139, 92, 246, 0.05), rgba(139, 92, 246, 0.15));
+}
+
+.nav-link.doctor-theme::after {
+    content: 'Doctor';
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    font-size: 0.65rem;
+    color: #8b5cf6;
+    background-color: rgba(139, 92, 246, 0.1);
+    padding: 2px 6px;
+    border-radius: 10px;
+    opacity: 0.7;
+}
+
+.nav-link.doctor-theme i {
+    color: #8b5cf6;
+}
+
+.nav-link.doctor-theme:hover {
+    background: linear-gradient(to right, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.2));
+    color: #7c3aed;
+}
+
 /* User profile info */
 .nav-link.user-info {
     cursor: default;

@@ -1,1 +1,328 @@
-<p>profile works!</p>
+<div class="profile-container">
+  <div class="profile-header">
+    <div class="header-content">
+      <h1 class="profile-title">Your Profile</h1>
+      <p class="profile-subtitle">View and manage your personal information</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="navigateToSettings()">
+        <i class="fas fa-cog"></i>
+        Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your profile...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="loadError">
+    <i class="fas fa-exclamation-circle"></i>
+    <p>Could not load your profile information. Please try refreshing the page.</p>
+    <button class="btn btn-primary" (click)="loadUserProfile()">Retry</button>
+  </div>
+
+  <!-- Profile Content -->
+  <div class="profile-content" *ngIf="!isLoading && !loadError">
+    <div class="profile-main">
+      <!-- Personal Information Card -->
+      <div class="profile-card">
+        <div class="card-header">
+          <h2 class="card-title">Personal Information</h2>
+          <button class="btn-icon" (click)="toggleEditMode()">
+            <i class="fas" [ngClass]="isEditMode ? 'fa-times' : 'fa-pen'"></i>
+            <span>{{ isEditMode ? 'Cancel' : 'Edit' }}</span>
+          </button>
+        </div>
+
+        <div class="card-body">
+          <form [formGroup]="profileForm">
+            <!-- Name Fields -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input 
+                  type="text" 
+                  id="firstName" 
+                  formControlName="firstName" 
+                  class="form-control"
+                  [class.is-invalid]="hasRequiredError(profileForm, 'firstName')"
+                >
+                <div class="invalid-feedback" *ngIf="hasRequiredError(profileForm, 'firstName')">
+                  First name is required
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input 
+                  type="text" 
+                  id="lastName" 
+                  formControlName="lastName" 
+                  class="form-control"
+                  [class.is-invalid]="hasRequiredError(profileForm, 'lastName')"
+                >
+                <div class="invalid-feedback" *ngIf="hasRequiredError(profileForm, 'lastName')">
+                  Last name is required
+                </div>
+              </div>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="form-group">
+              <label for="email">Email Address</label>
+                              <input 
+                  type="email" 
+                  id="email" 
+                  formControlName="email" 
+                  class="form-control"
+                  [class.is-invalid]="hasRequiredError(profileForm, 'email') || hasEmailError(profileForm, 'email')"
+                >
+                <div class="invalid-feedback" *ngIf="hasRequiredError(profileForm, 'email')">
+                  Email is required
+                </div>
+                <div class="invalid-feedback" *ngIf="hasEmailError(profileForm, 'email')">
+                  Please enter a valid email address
+                </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input 
+                type="tel" 
+                id="phone" 
+                formControlName="phone" 
+                class="form-control"
+              >
+            </div>
+            
+            <!-- Professional Details -->
+            <div class="form-group">
+              <label for="specialization">Specialization</label>
+              <input 
+                type="text" 
+                id="specialization" 
+                formControlName="specialization" 
+                class="form-control"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="hospital">Hospital / Institution</label>
+              <input 
+                type="text" 
+                id="hospital" 
+                formControlName="hospital" 
+                class="form-control"
+              >
+            </div>
+            
+            <!-- Bio -->
+            <div class="form-group">
+              <label for="bio">Bio / About</label>
+              <textarea 
+                id="bio" 
+                formControlName="bio" 
+                class="form-control" 
+                rows="4"
+              ></textarea>
+            </div>
+          </form>
+          
+          <!-- Action Buttons -->
+          <div class="form-actions" *ngIf="isEditMode">
+            <button 
+              class="btn btn-cancel" 
+              (click)="toggleEditMode()"
+            >
+              Cancel
+            </button>
+            <button 
+              class="btn btn-save" 
+              (click)="saveProfile()"
+              [disabled]="profileForm.invalid || isSaving"
+            >
+              <span *ngIf="!isSaving">Save Changes</span>
+              <span *ngIf="isSaving">Saving...</span>
+            </button>
+          </div>
+          
+          <!-- Success/Error Messages -->
+          <div class="form-feedback" *ngIf="saveSuccess || saveError">
+            <div class="alert alert-success" *ngIf="saveSuccess">
+              <i class="fas fa-check-circle"></i>
+              Profile updated successfully
+            </div>
+            <div class="alert alert-danger" *ngIf="saveError">
+              <i class="fas fa-exclamation-circle"></i>
+              {{ saveError }}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Security Card -->
+      <div class="profile-card">
+        <div class="card-header">
+          <h2 class="card-title">Security</h2>
+          <button class="btn-icon" (click)="togglePasswordEditMode()">
+            <i class="fas" [ngClass]="isPasswordEditMode ? 'fa-times' : 'fa-pen'"></i>
+            <span>{{ isPasswordEditMode ? 'Cancel' : 'Change Password' }}</span>
+          </button>
+        </div>
+        
+        <div class="card-body">
+          <div *ngIf="!isPasswordEditMode" class="password-status">
+            <i class="fas fa-key"></i>
+            <p>Password: ••••••••</p>
+            <p class="hint">Click the edit button to change your password</p>
+          </div>
+          
+          <form [formGroup]="securityForm" *ngIf="isPasswordEditMode">
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <input 
+                type="password" 
+                id="currentPassword" 
+                formControlName="currentPassword" 
+                class="form-control"
+                [class.is-invalid]="hasRequiredError(securityForm, 'currentPassword')"
+              >
+              <div class="invalid-feedback" *ngIf="hasRequiredError(securityForm, 'currentPassword')">
+                Current password is required
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <input 
+                type="password" 
+                id="newPassword" 
+                formControlName="newPassword" 
+                class="form-control"
+                [class.is-invalid]="hasRequiredError(securityForm, 'newPassword') || hasMinLengthError(securityForm, 'newPassword')"
+              >
+              <div class="invalid-feedback" *ngIf="hasRequiredError(securityForm, 'newPassword')">
+                New password is required
+              </div>
+              <div class="invalid-feedback" *ngIf="hasMinLengthError(securityForm, 'newPassword')">
+                Password must be at least 8 characters long
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="confirmPassword">Confirm New Password</label>
+              <input 
+                type="password" 
+                id="confirmPassword" 
+                formControlName="confirmPassword" 
+                class="form-control"
+                [class.is-invalid]="hasRequiredError(securityForm, 'confirmPassword') || hasPasswordMismatchError(securityForm)"
+              >
+              <div class="invalid-feedback" *ngIf="hasRequiredError(securityForm, 'confirmPassword')">
+                Please confirm your new password
+              </div>
+              <div class="invalid-feedback" *ngIf="hasPasswordMismatchError(securityForm)">
+                Passwords do not match
+              </div>
+            </div>
+            
+            <!-- Password requirements hint -->
+            <div class="password-requirements">
+              <h4>Password Requirements:</h4>
+              <ul>
+                <li>At least 8 characters long</li>
+                <li>Include both uppercase and lowercase letters</li>
+                <li>Include at least one number</li>
+                <li>Include at least one special character</li>
+              </ul>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="form-actions">
+              <button 
+                class="btn btn-cancel" 
+                (click)="togglePasswordEditMode()"
+              >
+                Cancel
+              </button>
+              <button 
+                class="btn btn-save" 
+                (click)="changePassword()"
+                [disabled]="securityForm.invalid || isSaving"
+              >
+                <span *ngIf="!isSaving">Change Password</span>
+                <span *ngIf="isSaving">Saving...</span>
+              </button>
+            </div>
+            
+            <!-- Success/Error Messages -->
+            <div class="form-feedback" *ngIf="saveSuccess || saveError">
+              <div class="alert alert-success" *ngIf="saveSuccess">
+                <i class="fas fa-check-circle"></i>
+                Password changed successfully
+              </div>
+              <div class="alert alert-danger" *ngIf="saveError">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ saveError }}
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sidebar with user info summary -->
+    <div class="profile-sidebar">
+      <div class="user-card">
+        <div class="user-avatar">
+          <i class="fas fa-user-md"></i>
+        </div>
+        <h2 class="user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h2>
+        <p class="user-role">Doctor</p>
+        <div class="user-details">
+          <div class="detail-item">
+            <i class="fas fa-envelope"></i>
+            <span>{{ currentUser?.email || 'No email provided' }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-phone"></i>
+            <span>{{ currentUser?.phone || 'No phone provided' }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-hospital"></i>
+            <span>{{ currentUser?.hospital || 'No hospital provided' }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-stethoscope"></i>
+            <span>{{ currentUser?.specialization || 'No specialization provided' }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Account Quick Links -->
+      <div class="quick-links">
+        <h3>Quick Links</h3>
+        <a [routerLink]="['/doctor/settings']" class="quick-link">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+        <a [routerLink]="['/doctor/dashboard']" class="quick-link">
+          <i class="fas fa-th-large"></i>
+          <span>Dashboard</span>
+        </a>
+        <a [routerLink]="['/doctor/patients']" class="quick-link">
+          <i class="fas fa-users"></i>
+          <span>Patients</span>
+        </a>
+        <a [routerLink]="['/doctor/reports']" class="quick-link">
+          <i class="fas fa-file-medical-alt"></i>
+          <span>Reports</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -47,7 +47,7 @@ export class DashboardContentComponent implements OnInit, AfterViewInit {
   normalResults: number = 0;
   
   // User info
-  currentUserName: string = 'Dr. Smith';
+  currentUserName: any = null;
 
   // Chart instances with proper typing
   resultsChart: ChartTypes['doughnut'] | null = null;
@@ -105,18 +105,9 @@ export class DashboardContentComponent implements OnInit, AfterViewInit {
         const firstName = userData.first_name || userData.firstName || '';
         const lastName = userData.last_name || userData.lastName || '';
         
-        // Format user name with both first and last name
-        if (firstName && lastName) {
-          this.currentUserName = `Dr. ${firstName} ${lastName}`;
-        } else if (userData.name) {
-          this.currentUserName = `Dr. ${userData.name}`;
-        } else if (userData.username) {
-          this.currentUserName = `Dr. ${userData.username}`;
-        } else if (userData.email) {
-          // Fallback to email if no name fields are available
-          this.currentUserName = `Dr. ${userData.email.split('@')[0]}`;
-        } else {
-          this.currentUserName = 'Dr. Smith';
+        this.currentUserName= {
+          firstName: userData.firstName || userData.first_name || userData.name || '',
+          lastName: userData.lastName || userData.last_name || userData.lastname || '',
         }
       },
       error: (error) => {

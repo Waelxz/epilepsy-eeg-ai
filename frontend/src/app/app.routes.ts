@@ -30,6 +30,8 @@ import { AnalysisNewComponent } from './doctor/components/analysis-new/analysis-
 import { AnalysisDetailsComponent } from './doctor/components/analysis-details/analysis-details.component';
 import { AnalysisHistoryComponent } from './doctor/components/analysis-history/analysis-history.component';
 import { ReportsListComponent } from './doctor/components/reports-list/reports-list.component';
+import { SettingsComponent as DoctorSettingsComponent } from './doctor/components/settings/settings.component';
+import { ProfileComponent as DoctorProfileComponent } from './doctor/components/profile/profile.component';
 
 export const routes: Routes = [
   // Admin routes with role protection
@@ -68,6 +70,8 @@ export const routes: Routes = [
       { path: 'analysis/:id', component: AnalysisDetailsComponent },
       { path: 'reports', component: ReportsListComponent },
       { path: 'reports/:id', component: AnalysisDetailsComponent },
+      { path: 'settings', component: DoctorSettingsComponent },
+      { path: 'profile', component: DoctorProfileComponent },
       // More doctor routes will be added as we create components
     ]
   },

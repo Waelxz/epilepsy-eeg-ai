@@ -1,7 +1,15 @@
 <div class="settings-container">
   <div class="settings-header">
-    <h1 class="settings-title">Settings</h1>
-    <p class="settings-description">Configure your application preferences and account settings</p>
+    <div class="header-content">
+      <h1 class="settings-title">Settings</h1>
+      <p class="settings-description">Configure your application preferences and account settings</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="navigateToProfile()">
+        <i class="fas fa-user-md"></i>
+        View Profile
+      </button>
+    </div>
   </div>
 
   <div class="settings-content">
@@ -40,11 +48,13 @@
       <!-- Appearance Settings Panel -->
       <div class="settings-panel" *ngIf="selectedTab === 'appearance'">
         <h2 class="panel-title">Appearance Settings</h2>
+        <p class="panel-description">Customize the look and feel of your application interface</p>
+        
         <form [formGroup]="settingsForm" class="settings-form">
           <!-- Theme Selection -->
           <div class="settings-group">
-            <h3 class="group-title">Theme</h3>
-            <p class="group-description">Choose the color theme for the application</p>
+            <h3 class="group-title">Theme Preferences</h3>
+            <p class="group-description">Choose the color theme that best suits your work environment</p>
             
             <div class="theme-options">
               <div *ngFor="let theme of themeOptions" class="theme-option">
@@ -66,8 +76,8 @@
           
           <!-- Font Size -->
           <div class="settings-group">
-            <h3 class="group-title">Font Size</h3>
-            <p class="group-description">Adjust the text size throughout the application</p>
+            <h3 class="group-title">Text Size</h3>
+            <p class="group-description">Adjust the size of text throughout the application for better readability</p>
             
             <div class="font-size-slider">
               <div class="slider-labels">
@@ -80,40 +90,42 @@
                 </option>
               </select>
               <div class="font-preview" [style.fontSize.px]="settingsForm.get('fontSize')?.value">
-                This is a preview of your selected font size.
+                This is a preview of your selected font size. Adjust it until it's comfortable for your eyes.
               </div>
             </div>
           </div>
           
           <!-- Accessibility Settings -->
           <div class="settings-group">
-            <h3 class="group-title">Accessibility</h3>
-            <p class="group-description">Configure accessibility options</p>
+            <h3 class="group-title">Accessibility Options</h3>
+            <p class="group-description">Enhance your experience with these accessibility features</p>
             
             <div class="checkbox-option">
               <input type="checkbox" 
                      id="reduceAnimations" 
                      formControlName="reduceAnimations">
-              <label for="reduceAnimations" class="checkbox-label">
+              <div class="checkbox-label">
                 <span class="option-title">Reduce animations</span>
-                <span class="option-description">Minimize motion effects throughout the application</span>
-              </label>
+                <span class="option-description">Minimize motion effects and transitions throughout the application for reduced visual stimulation</span>
+              </div>
             </div>
             
             <div class="checkbox-option">
               <input type="checkbox" 
                      id="highContrast" 
                      formControlName="highContrast">
-              <label for="highContrast" class="checkbox-label">
-                <span class="option-title">High contrast</span>
-                <span class="option-description">Increase contrast for better readability (Light theme only)</span>
-              </label>
+              <div class="checkbox-label">
+                <span class="option-title">High contrast mode</span>
+                <span class="option-description">Increase contrast between elements for better visibility and readability</span>
+              </div>
             </div>
             
             <!-- Warning for dark mode + high contrast -->
             <div class="high-contrast-note" *ngIf="settingsForm.get('highContrast')?.value && settingsForm.get('theme')?.value === 'dark'">
               <i class="fas fa-exclamation-triangle"></i>
-              High contrast mode is only available with the Light theme. This setting will have no effect while Dark theme is active.
+              <div>
+                High contrast mode is optimized for the Light theme. This setting will have limited effect while Dark theme is active.
+              </div>
             </div>
           </div>
           
@@ -123,12 +135,15 @@
                     class="btn btn-cancel" 
                     (click)="discardAppearanceChanges()"
                     [disabled]="!hasUnsavedChanges()">
+              <i class="fas fa-times"></i>
               Cancel
             </button>
             <button type="button" 
                     class="btn btn-save" 
                     (click)="saveAppearanceSettings()"
                     [disabled]="isSaving || !hasUnsavedChanges()">
+              <i *ngIf="!isSaving" class="fas fa-check"></i>
+              <i *ngIf="isSaving" class="fas fa-spinner fa-spin"></i>
               <span *ngIf="!isSaving">Save Changes</span>
               <span *ngIf="isSaving">Saving...</span>
             </button>
@@ -138,7 +153,7 @@
           <div class="settings-feedback" *ngIf="saveSuccess || saveError">
             <div class="alert alert-success" *ngIf="saveSuccess">
               <i class="fas fa-check-circle"></i>
-              Settings saved successfully
+              Settings saved successfully! Your changes have been applied.
             </div>
             <div class="alert alert-danger" *ngIf="saveError">
               <i class="fas fa-exclamation-circle"></i>
@@ -151,22 +166,24 @@
       <!-- Profile Settings Panel -->
       <div class="settings-panel" *ngIf="selectedTab === 'profile'">
         <h2 class="panel-title">Profile Information</h2>
-        <p class="panel-description">Update your personal information</p>
+        <p class="panel-description">Manage your personal and professional information</p>
         
         <div class="loading-state" *ngIf="isLoadingUser">
           <div class="spinner"></div>
-          <p>Loading profile information...</p>
+          <p>Loading your profile information...</p>
         </div>
         
         <div class="error-state" *ngIf="userError">
           <i class="fas fa-exclamation-triangle"></i>
-          <p>Could not load your profile information. Please try refreshing the page.</p>
+          <p>We couldn't load your profile information. Please try refreshing the page or contact support if the issue persists.</p>
+          <button class="btn btn-primary" (click)="loadUserData()">Try Again</button>
         </div>
         
         <form [formGroup]="profileForm" class="settings-form" *ngIf="!isLoadingUser && !userError">
           <!-- Basic Information -->
           <div class="settings-group">
-            <h3 class="group-title">Basic Information</h3>
+            <h3 class="group-title">Personal Information</h3>
+            <p class="group-description">Update your basic contact details</p>
             
             <div class="form-row">
               <div class="form-group">
@@ -177,7 +194,7 @@
                        class="form-control"
                        [class.is-invalid]="hasError(profileForm, 'firstName', 'required')">
                 <div class="invalid-feedback" *ngIf="hasError(profileForm, 'firstName', 'required')">
-                  First name is required
+                  Please enter your first name
                 </div>
               </div>
               
@@ -189,7 +206,7 @@
                        class="form-control"
                        [class.is-invalid]="hasError(profileForm, 'lastName', 'required')">
                 <div class="invalid-feedback" *ngIf="hasError(profileForm, 'lastName', 'required')">
-                  Last name is required
+                  Please enter your last name
                 </div>
               </div>
             </div>
@@ -202,7 +219,7 @@
                      class="form-control"
                      [class.is-invalid]="hasError(profileForm, 'email', 'required') || hasError(profileForm, 'email', 'email')">
               <div class="invalid-feedback" *ngIf="hasError(profileForm, 'email', 'required')">
-                Email is required
+                Email address is required
               </div>
               <div class="invalid-feedback" *ngIf="hasError(profileForm, 'email', 'email')">
                 Please enter a valid email address
@@ -214,36 +231,41 @@
               <input type="tel" 
                      id="phone" 
                      formControlName="phone" 
-                     class="form-control">
+                     class="form-control"
+                     placeholder="e.g. +1 (555) 123-4567">
             </div>
           </div>
           
           <!-- Professional Information -->
           <div class="settings-group">
-            <h3 class="group-title">Professional Information</h3>
+            <h3 class="group-title">Professional Details</h3>
+            <p class="group-description">Share information about your medical expertise and workplace</p>
             
             <div class="form-group">
-              <label for="specialization">Specialization</label>
+              <label for="specialization">Medical Specialization</label>
               <input type="text" 
                      id="specialization" 
                      formControlName="specialization" 
-                     class="form-control">
+                     class="form-control"
+                     placeholder="e.g. Neurology, Epileptology">
             </div>
             
             <div class="form-group">
-              <label for="hospital">Hospital / Institution</label>
+              <label for="hospital">Hospital / Medical Institution</label>
               <input type="text" 
                      id="hospital" 
                      formControlName="hospital" 
-                     class="form-control">
+                     class="form-control"
+                     placeholder="e.g. City General Hospital">
             </div>
             
             <div class="form-group">
-              <label for="bio">Bio / About</label>
+              <label for="bio">Professional Bio</label>
               <textarea id="bio" 
                         formControlName="bio" 
                         class="form-control" 
-                        rows="4"></textarea>
+                        rows="4"
+                        placeholder="Share your professional background, experience, and areas of interest"></textarea>
             </div>
           </div>
           
@@ -252,12 +274,15 @@
             <button type="button" 
                     class="btn btn-cancel" 
                     (click)="loadUserData()">
+              <i class="fas fa-times"></i>
               Cancel
             </button>
             <button type="button" 
                     class="btn btn-save" 
                     (click)="saveProfileSettings()"
                     [disabled]="profileForm.invalid || isSaving">
+              <i *ngIf="!isSaving" class="fas fa-check"></i>
+              <i *ngIf="isSaving" class="fas fa-spinner fa-spin"></i>
               <span *ngIf="!isSaving">Save Profile</span>
               <span *ngIf="isSaving">Saving...</span>
             </button>
@@ -267,7 +292,7 @@
           <div class="settings-feedback" *ngIf="saveSuccess || saveError">
             <div class="alert alert-success" *ngIf="saveSuccess">
               <i class="fas fa-check-circle"></i>
-              Profile saved successfully
+              Profile updated successfully! Your information has been saved.
             </div>
             <div class="alert alert-danger" *ngIf="saveError">
               <i class="fas fa-exclamation-circle"></i>
@@ -280,12 +305,13 @@
       <!-- Security Settings Panel -->
       <div class="settings-panel" *ngIf="selectedTab === 'security'">
         <h2 class="panel-title">Security Settings</h2>
-        <p class="panel-description">Change your password and manage security preferences</p>
+        <p class="panel-description">Manage your password and account security options</p>
         
         <form [formGroup]="securityForm" class="settings-form">
           <!-- Password Change -->
           <div class="settings-group">
             <h3 class="group-title">Change Password</h3>
+            <p class="group-description">Update your password to maintain account security</p>
             
             <div class="form-group">
               <label for="currentPassword">Current Password</label>
@@ -295,7 +321,7 @@
                      class="form-control"
                      [class.is-invalid]="hasError(securityForm, 'currentPassword', 'required')">
               <div class="invalid-feedback" *ngIf="hasError(securityForm, 'currentPassword', 'required')">
-                Current password is required
+                Please enter your current password
               </div>
             </div>
             
@@ -307,7 +333,7 @@
                      class="form-control"
                      [class.is-invalid]="hasError(securityForm, 'newPassword', 'required') || hasError(securityForm, 'newPassword', 'minlength')">
               <div class="invalid-feedback" *ngIf="hasError(securityForm, 'newPassword', 'required')">
-                New password is required
+                Please enter a new password
               </div>
               <div class="invalid-feedback" *ngIf="hasError(securityForm, 'newPassword', 'minlength')">
                 Password must be at least 8 characters long
@@ -328,6 +354,17 @@
                 Passwords do not match
               </div>
             </div>
+            
+            <div class="password-requirements">
+              <h4><i class="fas fa-key"></i> Password Requirements</h4>
+              <ul>
+                <li>At least 8 characters in length</li>
+                <li>Include at least one uppercase letter</li>
+                <li>Include at least one lowercase letter</li>
+                <li>Include at least one number</li>
+                <li>Include at least one special character</li>
+              </ul>
+            </div>
           </div>
           
           <!-- Action buttons -->
@@ -335,14 +372,17 @@
             <button type="button" 
                     class="btn btn-cancel" 
                     (click)="securityForm.reset()">
+              <i class="fas fa-times"></i>
               Cancel
             </button>
             <button type="button" 
                     class="btn btn-save" 
                     (click)="saveSecuritySettings()"
                     [disabled]="securityForm.invalid || isSaving">
+              <i *ngIf="!isSaving" class="fas fa-lock"></i>
+              <i *ngIf="isSaving" class="fas fa-spinner fa-spin"></i>
               <span *ngIf="!isSaving">Change Password</span>
-              <span *ngIf="isSaving">Saving...</span>
+              <span *ngIf="isSaving">Updating...</span>
             </button>
           </div>
           
@@ -350,7 +390,7 @@
           <div class="settings-feedback" *ngIf="saveSuccess || saveError">
             <div class="alert alert-success" *ngIf="saveSuccess">
               <i class="fas fa-check-circle"></i>
-              Password changed successfully
+              Password changed successfully! Your new password is now active.
             </div>
             <div class="alert alert-danger" *ngIf="saveError">
               <i class="fas fa-exclamation-circle"></i>
@@ -363,65 +403,66 @@
       <!-- Notifications Settings Panel -->
       <div class="settings-panel" *ngIf="selectedTab === 'notifications'">
         <h2 class="panel-title">Notification Preferences</h2>
-        <p class="panel-description">Configure how you receive notifications</p>
+        <p class="panel-description">Choose how and when you receive notifications from the system</p>
         
         <form [formGroup]="notificationForm" class="settings-form">
           <div class="settings-group">
-            <h3 class="group-title">Email Notifications</h3>
+            <h3 class="group-title">Delivery Methods</h3>
+            <p class="group-description">Select how you'd like to receive notifications</p>
             
             <div class="checkbox-option">
               <input type="checkbox" 
                      id="emailNotifications" 
                      formControlName="emailNotifications">
-              <label for="emailNotifications" class="checkbox-label">
-                <span class="option-title">Enable email notifications</span>
-                <span class="option-description">Receive important notifications via email</span>
-              </label>
+              <div class="checkbox-label">
+                <span class="option-title">Email notifications</span>
+                <span class="option-description">Receive important updates and alerts via email</span>
+              </div>
             </div>
           </div>
           
           <div class="settings-group">
-            <h3 class="group-title">Notification Categories</h3>
-            <p class="group-description">Select which types of notifications you'd like to receive</p>
+            <h3 class="group-title">Notification Types</h3>
+            <p class="group-description">Choose which types of notifications you want to receive</p>
             
             <div class="checkbox-option">
               <input type="checkbox" 
                      id="newPatientNotifications" 
                      formControlName="newPatientNotifications">
-              <label for="newPatientNotifications" class="checkbox-label">
+              <div class="checkbox-label">
                 <span class="option-title">New patient registrations</span>
-                <span class="option-description">Receive notifications when new patients are added</span>
-              </label>
+                <span class="option-description">Get notified when new patients are added to your care list</span>
+              </div>
             </div>
             
             <div class="checkbox-option">
               <input type="checkbox" 
                      id="analysisResultsNotifications" 
                      formControlName="analysisResultsNotifications">
-              <label for="analysisResultsNotifications" class="checkbox-label">
+              <div class="checkbox-label">
                 <span class="option-title">Analysis results</span>
-                <span class="option-description">Receive notifications when analysis results are ready</span>
-              </label>
+                <span class="option-description">Receive alerts when new EEG analysis results are available</span>
+              </div>
             </div>
             
             <div class="checkbox-option">
               <input type="checkbox" 
                      id="appointmentReminders" 
                      formControlName="appointmentReminders">
-              <label for="appointmentReminders" class="checkbox-label">
+              <div class="checkbox-label">
                 <span class="option-title">Appointment reminders</span>
-                <span class="option-description">Receive reminders about upcoming appointments</span>
-              </label>
+                <span class="option-description">Get reminders about upcoming patient appointments</span>
+              </div>
             </div>
             
             <div class="checkbox-option">
               <input type="checkbox" 
                      id="systemUpdates" 
                      formControlName="systemUpdates">
-              <label for="systemUpdates" class="checkbox-label">
+              <div class="checkbox-label">
                 <span class="option-title">System updates</span>
-                <span class="option-description">Receive notifications about system updates and new features</span>
-              </label>
+                <span class="option-description">Stay informed about new features and improvements to the platform</span>
+              </div>
             </div>
           </div>
           
@@ -430,12 +471,15 @@
             <button type="button" 
                     class="btn btn-cancel" 
                     (click)="notificationForm.reset()">
+              <i class="fas fa-times"></i>
               Cancel
             </button>
             <button type="button" 
                     class="btn btn-save" 
                     (click)="saveNotificationSettings()"
                     [disabled]="isSaving">
+              <i *ngIf="!isSaving" class="fas fa-check"></i>
+              <i *ngIf="isSaving" class="fas fa-spinner fa-spin"></i>
               <span *ngIf="!isSaving">Save Preferences</span>
               <span *ngIf="isSaving">Saving...</span>
             </button>
@@ -445,7 +489,7 @@
           <div class="settings-feedback" *ngIf="saveSuccess || saveError">
             <div class="alert alert-success" *ngIf="saveSuccess">
               <i class="fas fa-check-circle"></i>
-              Notification preferences saved successfully
+              Notification preferences saved successfully! You'll now receive updates based on your selections.
             </div>
             <div class="alert alert-danger" *ngIf="saveError">
               <i class="fas fa-exclamation-circle"></i>

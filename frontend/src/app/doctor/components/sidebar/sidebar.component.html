@@ -40,16 +40,20 @@
             <i class="fas fa-question-circle"></i>
             <span>Help</span>
         </a>
-        <!-- Theme Toggle -->
-        <a class="nav-link theme-toggle" (click)="toggleTheme()">
+        
+     
+        
+        <!-- App-wide Theme Toggle -->
+        <a class="nav-link theme-toggle" (click)="toggleDoctorTheme()">
             <i [class]="isDarkMode ? 'fas fa-moon' : 'fas fa-sun'"></i>
             <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
         </a>
+        
         <!-- User Profile Info -->
-        <div class="nav-link user-info">
+        <a [routerLink]="['/doctor/profile']" routerLinkActive="active" class="nav-link user-info">
             <i class="fas fa-user-md"></i>
-            <span class="doctor-name">{{ getUserFullName() }}</span>
-        </div>
+            <span class="doctor-name">Dr.{{ currentUser?.firstName }} {{ currentUser?.lastName }}</span>
+        </a>
         <a (click)="logout()" class="nav-link logout">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>

@@ -19,6 +19,7 @@ import { UserService } from '../../../shared/services/user.service';
 })
 export class SidebarComponent implements OnInit {
   isDarkMode = false;
+  isDoctorDarkMode = false; // Specific flag for doctor dark theme
   currentUser: any = null;
   isLoadingUser: boolean = true;
   userError: boolean = false;
@@ -40,6 +41,14 @@ export class SidebarComponent implements OnInit {
       this.isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     } else {
       this.isDarkMode = false;
+    }
+    
+    // Check for doctor dark mode preference
+    this.isDoctorDarkMode = localStorage.getItem('doctor_dark_mode') === 'true';
+    
+    // If doctor dark mode is enabled, apply it regardless of the app theme
+    if (this.isDoctorDarkMode) {
+      this.applyDoctorDarkTheme(true);
     }
     
     // Load current user data
@@ -90,6 +99,7 @@ export class SidebarComponent implements OnInit {
     }
   }
 
+  // Toggle app-wide theme
   toggleTheme(): void {
     this.isDarkMode = !this.isDarkMode;
     // Update app settings
@@ -97,6 +107,59 @@ export class SidebarComponent implements OnInit {
       ...this.appSettingsService.getSettings(),
       theme: this.isDarkMode ? 'dark' : 'light'
     });
+  }
+  
+  // Toggle doctor-specific dark theme
+  toggleDoctorTheme(): void {
+    this.isDoctorDarkMode = !this.isDoctorDarkMode;
+    
+    // Save preference
+    localStorage.setItem('doctor_dark_mode', this.isDoctorDarkMode.toString());
+    
+    // Apply or remove doctor dark theme
+    this.applyDoctorDarkTheme(this.isDoctorDarkMode);
+  }
+  
+  // Apply or remove doctor dark theme
+  applyDoctorDarkTheme(apply: boolean): void {
+    const body = document.body;
+    
+    if (apply) {
+      // Add doctor-module class to enable scoping if not already present
+      if (!body.classList.contains('doctor-module')) {
+        body.classList.add('doctor-module');
+      }
+      
+      // Add the theme-dark class for doctor dark theme
+      body.classList.add('theme-dark');
+      
+      // Ensure dark theme styles are loaded
+      this.ensureDoctorDarkThemeStyles();
+    } else {
+      // Remove the theme-dark class
+      body.classList.remove('theme-dark');
+      
+      // We keep the doctor-module class for proper scoping
+    }
+  }
+  
+  // Ensure dark theme styles are loaded
+  private ensureDoctorDarkThemeStyles(): void {
+    if (!document.getElementById('doctor-dark-theme-styles')) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'doctor-dark-theme-styles';
+      
+      // Load CSS file
+      fetch('assets/doctor-dark-theme.css')
+        .then(response => response.text())
+        .then(css => {
+          styleEl.textContent = css;
+          document.head.appendChild(styleEl);
+        })
+        .catch(error => {
+          console.error('Error loading doctor dark theme:', error);
+        });
+    }
   }
   
   logout() {
