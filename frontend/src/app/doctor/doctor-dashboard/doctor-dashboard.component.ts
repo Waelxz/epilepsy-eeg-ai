@@ -4,6 +4,7 @@ import { SidebarComponent } from '../components/sidebar/sidebar.component';
 import { NavbarComponent } from '../components/navbar/navbar.component';
 import { ImportButtonComponent } from '../components/import-button/import-button.component';
 import { DashboardContentComponent } from '../components/dashboard-content/dashboard-content.component';
+import { ChatFloatComponent } from '../components/chat-float/chat-float.component';
 
 @Component({
   selector: 'app-doctor-dashboard',
@@ -12,7 +13,8 @@ import { DashboardContentComponent } from '../components/dashboard-content/dashb
   imports: [
     RouterOutlet,
     SidebarComponent,
-    
+    NavbarComponent,
+    ChatFloatComponent
   ],
   standalone: true
 })

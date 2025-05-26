@@ -56,48 +56,30 @@ export class SidebarComponent implements OnInit {
   }
   
   loadUserData(): void {
-    this.isLoadingUser = true;
+    // Get current user data from UserService
     this.userService.getCurrentUserProfile().subscribe({
       next: (userData) => {
-        console.log('User data received:', userData);
-        this.currentUser = userData;
-        this.isLoadingUser = false;
+        console.log('Dashboard - User data received:', userData);
+        
+        // Check all possible property name combinations
+        const firstName = userData.first_name || userData.firstName || '';
+        const lastName = userData.last_name || userData.lastName || '';
+        
+        this.currentUser= {
+          firstName: userData.firstName || userData.first_name || userData.name || '',
+          lastName: userData.lastName || userData.last_name || userData.lastname || '',
+        }
       },
       error: (error) => {
-        console.error('Error loading user data:', error);
-        this.userError = true;
-        this.isLoadingUser = false;
+        console.error('Error loading user info:', error);
+        // Use default name on error
+        this.currentUser = 'Dr. Smith';
       }
     });
   }
   
   // Get user's full name
-  getUserFullName(): string {
-    if (this.isLoadingUser) {
-      return 'Loading...';
-    }
-    
-    if (this.userError || !this.currentUser) {
-      return 'Doctor';
-    }
-    
-    // Check all possible property name combinations
-    const firstName = this.currentUser.first_name || this.currentUser.firstName || '';
-    const lastName = this.currentUser.last_name || this.currentUser.lastName || '';
-    
-    if (firstName && lastName) {
-      return `Dr. ${firstName} ${lastName}`;
-    } else if (this.currentUser.name) {
-      return `Dr. ${this.currentUser.name}`;
-    } else if (this.currentUser.username) {
-      return `Dr. ${this.currentUser.username}`;
-    } else if (this.currentUser.email) {
-      // Fallback to email if no name fields are available
-      return `Dr. ${this.currentUser.email.split('@')[0]}`;
-    } else {
-      return 'Doctor';
-    }
-  }
+
 
   // Toggle app-wide theme
   toggleTheme(): void {

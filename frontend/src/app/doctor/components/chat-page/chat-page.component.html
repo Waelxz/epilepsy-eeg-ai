@@ -1,0 +1,87 @@
+<div class="chat-page-container">
+  <div class="chat-page-header">
+    <div class="header-content">
+      <h2>Epilepsy Assistant <span style="font-size: 0.5em; opacity: 0.8; font-weight: normal; margin-left: 5px;">powered by</span><span style="font-size: 0.7em; opacity: 0.8; font-weight: normal; margin-left: 5px;">Deepseek V3</span> </h2>
+      <p class="subtitle">AI-powered assistant with medical knowledge about epilepsy and EEG interpretation</p>
+    </div>
+    
+  </div>
+
+  <div class="chat-page-content">
+    <div class="chat-area">
+      <div class="messages-container" #chatContainer>
+        <div *ngFor="let message of messages" class="chat-message" [ngClass]="message.type">
+          <div class="message-header">
+            <div class="message-sender">
+              <i *ngIf="message.type === 'assistant'" class="fas fa-robot"></i>
+              <i *ngIf="message.type === 'user'" class="fas fa-user-md"></i>
+              {{ message.type === 'assistant' ? 'Epilepsy Assistant' : 'You' }}
+            </div>
+            <div class="message-time">
+              {{ getMessageTime(message.timestamp) }}
+            </div>
+          </div>
+          <div class="message-content" [innerHTML]="message.content | formatChatMessage"></div>
+        </div>
+        
+        <div class="typing-indicator" *ngIf="isLoading">
+          <span></span>
+          <span></span>
+          <span></span>
+          <div class="typing-text">Assistant is typing...</div>
+        </div>
+        
+        <div class="error-message" *ngIf="errorMessage">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ errorMessage }}
+        </div>
+      </div>
+
+      <div class="input-area">
+        <textarea 
+          [(ngModel)]="newMessage" 
+          placeholder="Type your question about epilepsy or EEG interpretation..." 
+          (keydown.enter)="$event.preventDefault(); sendMessage()"
+          [disabled]="isLoading"
+        ></textarea>
+        <button 
+          class="send-button" 
+          (click)="sendMessage()" 
+          [disabled]="!newMessage.trim() || isLoading"
+        >
+          <i class="fas fa-paper-plane"></i>
+         
+        </button>
+      </div>
+    </div>
+
+    <div class="info-sidebar">
+     
+      <div class="info-card">
+        <h3><i class="fas fa-info-circle"></i> About the Assistant</h3>
+        <p>The Epilepsy Assistant is an AI-powered helper <span style="font-size: 0.9em; opacity: 0.7; font-style: italic;">using Deepseek V3</span> that can answer questions about:</p>
+        <ul>
+          <li>Epilepsy diagnosis and treatment</li>
+          <li>EEG interpretation</li>
+          <li>Focal vs. non-focal patterns</li>
+          <li>Seizure types and classifications</li>
+          <li>Patient-specific data (when available)</li>
+        </ul>
+      </div>
+
+      <div class="info-card">
+        <h3><i class="fas fa-lightbulb"></i> Suggested Questions</h3>
+        <ul class="suggested-questions">
+          <li><button (click)="newMessage='What is the difference between focal and non-focal EEG patterns?'; sendMessage()">What is the difference between focal and non-focal EEG patterns?</button></li>
+          <li><button (click)="newMessage='How can I interpret EEG results with high confidence scores?'; sendMessage()">How can I interpret EEG results with high confidence scores?</button></li>
+          <li><button (click)="newMessage='What treatments are recommended for focal epilepsy?'; sendMessage()">What treatments are recommended for focal epilepsy?</button></li>
+          <li><button (click)="newMessage='What are the common causes of epilepsy?'; sendMessage()">What are the common causes of epilepsy?</button></li>
+        </ul>
+      </div>
+
+      <div class="disclaimer">
+        <p><strong>Medical Disclaimer:</strong> This AI assistant provides information for educational purposes only. Always rely on your professional medical judgment for patient care decisions.</p>
+      </div>
+    </div>
+  </div>
+</div> 

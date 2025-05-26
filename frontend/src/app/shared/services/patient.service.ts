@@ -185,8 +185,9 @@ export class PatientService {
         const completedAnalyses = item.analyses.filter((a: any) => a.status === 'completed');
         const pendingAnalyses = item.analyses.filter((a: any) => 
           a.status === 'processing' || a.status === 'queued');
-        const abnormalResults = completedAnalyses.filter((a: any) => a.result?.class === 1);
-        const normalResults = completedAnalyses.filter((a: any) => a.result?.class === 0);
+        // CNN-BERN classification: class 0 is Focal (abnormal), class 1 is Non-Focal (normal)
+        const abnormalResults = completedAnalyses.filter((a: any) => a.result?.class === 0);
+        const normalResults = completedAnalyses.filter((a: any) => a.result?.class === 1);
         
         // Update counts from actual analyses data if available
         transformedPatient.analysisStatus.abnormalResultCount = abnormalResults.length;

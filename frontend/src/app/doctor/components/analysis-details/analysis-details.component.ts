@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AnalysisService, Analysis } from '../../../shared/services/analysis.service';
 import { PatientService, Patient } from '../../../shared/services/patient.service';
 import { ReportService } from '../../../shared/services/report.service';
+import { ToastService } from '../../../shared/services/toast.service';
 import { Chart, registerables, ChartConfiguration, ChartType } from 'chart.js';
 
 // Register Chart.js components
@@ -68,6 +69,7 @@ export class AnalysisDetailsComponent implements OnInit, OnDestroy, AfterViewIni
     private analysisService: AnalysisService,
     private patientService: PatientService,
     private reportService: ReportService,
+    private toastService: ToastService,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     // Check if we're in the browser
@@ -203,8 +205,8 @@ export class AnalysisDetailsComponent implements OnInit, OnDestroy, AfterViewIni
         // Update the existingReport property
         this.existingReport = report;
         
-        // Show a toast or notification
-        alert(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} report generated successfully!`);
+        // Show a toast notification
+        this.toastService.success(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} report generated successfully!`);
         
         // Automatically download the report
         this.downloadReport(report.id || '');
@@ -215,7 +217,7 @@ export class AnalysisDetailsComponent implements OnInit, OnDestroy, AfterViewIni
         
         // Show error message with more details
         const errorMsg = error.message || 'Unknown error';
-        alert(`Failed to generate ${reportType} report: ${errorMsg}`);
+        this.toastService.error(`Failed to generate ${reportType} report: ${errorMsg}`);
       }
     });
   }
@@ -251,7 +253,7 @@ export class AnalysisDetailsComponent implements OnInit, OnDestroy, AfterViewIni
       },
       error: (error) => {
         console.error('Error downloading report:', error);
-        alert('Failed to download report. Please try again later.');
+        this.toastService.error('Failed to download report. Please try again later.');
       }
     });
   }

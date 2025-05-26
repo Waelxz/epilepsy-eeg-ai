@@ -1,0 +1,55 @@
+<div class="chat-float-container" [class.open]="isOpen">
+  <!-- Chat button -->
+  <button class="chat-float-button" (click)="toggleChat()">
+    <i class="fas" [ngClass]="isOpen ? 'fa-times' : 'fa-comment-medical'"></i>
+  </button>
+  
+  <!-- Chat panel -->
+  <div class="chat-panel" *ngIf="isOpen">
+    <div class="chat-header">
+      <h3>Medical AI Assistant <span style="font-size: 0.5em; opacity: 0.7; font-weight: normal; margin-left: 5px;">powered by</span><span style="font-size: 0.8em; opacity: 0.7; font-weight: normal; margin-left: 5px;">Deepseek V3</span></h3>
+      <div class="chat-actions">
+        <button class="chat-action-button" (click)="clearChat()" title="Clear conversation">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="chat-messages">
+      <div *ngFor="let message of messages" class="chat-message" [ngClass]="message.type">
+        <div class="message-content">
+          
+          <div class="message-text" [innerHTML]="message.content | formatChatMessage"></div>
+        </div>
+        <div class="message-time">{{ message.timestamp | date:'shortTime' }}</div>
+      </div>
+      
+      <div class="typing-indicator" *ngIf="isLoading">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+    </div>
+    
+    <div class="chat-input">
+      <input 
+        type="text" 
+        [(ngModel)]="newMessage"
+        placeholder="Type your question..."
+        (keyup.enter)="sendMessage()"
+        [disabled]="isLoading"
+      />
+      <button 
+        class="send-button" 
+        (click)="sendMessage()" 
+        [disabled]="!newMessage.trim() || isLoading"
+      >
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div> 
