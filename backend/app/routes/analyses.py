@@ -426,12 +426,13 @@ def update_patient_analysis_status(patient_id):
             return
         
         # Calculate analysis stats
+        # CNN-BERN classification scheme: class 0 is Focal (abnormal), class 1 is Non-Focal (normal)
         analysis_status = {
             "hasAnalysis": True,
             "totalAnalysisCount": len(analyses),
             "lastAnalysisDate": max((a.get("uploadDate", a.get("createdAt", datetime.now())) for a in analyses), default=datetime.now()),
-            "abnormalResultCount": sum(1 for a in analyses if a.get("result", {}).get("class") == 1),
-            "normalResultCount": sum(1 for a in analyses if a.get("result", {}).get("class") == 0),
+            "abnormalResultCount": sum(1 for a in analyses if a.get("result", {}).get("class") == 0),
+            "normalResultCount": sum(1 for a in analyses if a.get("result", {}).get("class") == 1),
             "pendingAnalysisCount": sum(1 for a in analyses if a.get("status") == "queued" or a.get("status") == "processing")
         }
         

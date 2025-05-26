@@ -42,8 +42,8 @@ for patient in patients:
             "hasAnalysis": True,
             "totalAnalysisCount": len(analyses),
             "lastAnalysisDate": max(a.get("createdAt", datetime.now()) for a in analyses),
-            "abnormalResultCount": sum(1 for a in analyses if a.get("result", {}).get("class") == 1),
-            "normalResultCount": sum(1 for a in analyses if a.get("result", {}).get("class") == 0),
+            "abnormalResultCount": sum(1 for a in analyses if a.get("result", {}).get("class") == 0),
+            "normalResultCount": sum(1 for a in analyses if a.get("result", {}).get("class") == 1),
             "pendingAnalysisCount": sum(1 for a in analyses if a.get("status") == "queued" or a.get("status") == "processing")
         }
         

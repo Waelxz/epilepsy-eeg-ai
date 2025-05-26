@@ -11,6 +11,7 @@ from .routes.models import router as models_router
 from .routes.patients import router as patients_router
 from .routes.analyses import router as analyses_router
 from .routes.reports import router as reports_router
+from .routes.chat import router as chat_router
 from .routes.google_auth import router as google_auth_router
 import logging
 import os
@@ -171,6 +172,7 @@ app.include_router(models_router, prefix="/api")
 app.include_router(patients_router, prefix="/api")
 app.include_router(analyses_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
+app.include_router(chat_router, prefix="/api")
 app.include_router(google_auth_router, prefix="/api")
 
 @app.on_event("startup")
@@ -197,6 +199,14 @@ async def startup_event():
                 logger.error("Model file exists but could not be loaded")
         except Exception as e:
             logger.error(f"Error loading model for validation: {str(e)}")
+            
+    # Initialize RAG service for chatbot
+    from .utils.rag_service import rag_service
+    logger.info("Initializing RAG service for chatbot...")
+    if rag_service.initialize():
+        logger.info("RAG service initialized successfully")
+    else:
+        logger.warning("RAG service initialization failed or no PDF documents were found")
 
 @app.get("/", tags=["Root"])
 def read_root():

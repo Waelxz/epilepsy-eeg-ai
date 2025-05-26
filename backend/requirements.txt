@@ -18,6 +18,14 @@ reportlab
 matplotlib
 PyJWT
 Pillow
+langchain
+langchain-openai
+langchain-community
+openai
+pypdf
+faiss-cpu
+sentence-transformers
+openrouter
 
 
 

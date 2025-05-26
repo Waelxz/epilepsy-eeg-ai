@@ -174,8 +174,9 @@ async def list_patients(
                 # If there are analyses, fetch the full data
                 completed_analyses = list(db.analyses.find({"patientId": patient["_id"], "status": "completed"}))
                 
-                abnormal_count = sum(1 for a in completed_analyses if a.get("result") and a["result"].get("class") == 1)
-                normal_count = sum(1 for a in completed_analyses if a.get("result") and a["result"].get("class") == 0)
+                # CNN-BERN classification: class 0 is Focal (abnormal), class 1 is Non-Focal (normal)
+                abnormal_count = sum(1 for a in completed_analyses if a.get("result") and a["result"].get("class") == 0)
+                normal_count = sum(1 for a in completed_analyses if a.get("result") and a["result"].get("class") == 1)
                 pending_count = db.analyses.count_documents({
                     "patientId": patient["_id"], 
                     "status": {"$in": ["queued", "processing"]}
@@ -240,8 +241,9 @@ async def get_patient(
         analyses_count = db.analyses.count_documents({"patientId": patient["_id"]})
         completed_analyses = list(db.analyses.find({"patientId": patient["_id"], "status": "completed"}))
         
-        abnormal_count = sum(1 for a in completed_analyses if a.get("result") and a["result"].get("class") == 1)
-        normal_count = sum(1 for a in completed_analyses if a.get("result") and a["result"].get("class") == 0)
+        # CNN-BERN classification: class 0 is Focal (abnormal), class 1 is Non-Focal (normal)
+        abnormal_count = sum(1 for a in completed_analyses if a.get("result") and a["result"].get("class") == 0)
+        normal_count = sum(1 for a in completed_analyses if a.get("result") and a["result"].get("class") == 1)
         pending_count = db.analyses.count_documents({
             "patientId": patient["_id"], 
             "status": {"$in": ["queued", "processing"]}
