@@ -1,0 +1,1043 @@
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, KeepTogether
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+import os
+from datetime import datetime
+import base64
+
+def generate_pdf_report(patient, analysis, report_type, output_path, user=None):
+    """
+    Generate a PDF report based on the analysis and patient data
+    
+    Args:
+        patient: MongoDB patient document
+        analysis: MongoDB analysis document
+        report_type: Type of report ('patient' or 'analysis', or legacy types)
+        output_path: Where to save the PDF file
+        user: User generating the report
+        
+    Returns:
+        Path to the generated report
+    """
+    
+    # Map new report types to legacy types for backward compatibility
+    if report_type == "patient":
+        # Patient report uses clinical format with patient focus
+        actual_report_type = "clinical"
+    elif report_type == "analysis":
+        # Analysis report uses detailed format with visualization
+        actual_report_type = "detailed"
+    else:
+        # Keep the original type for backward compatibility
+        actual_report_type = report_type
+    
+    # Create a PDF document
+    doc = SimpleDocTemplate(
+        output_path,
+        pagesize=letter,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+    
+    # Define colors
+    header_color = colors.Color(0.2, 0.6, 0.6)  # Teal color for header
+    section_bg_color = colors.Color(0.9, 0.9, 0.9)  # Light gray for section backgrounds
+    border_color = colors.black
+    
+    # Container for the 'Flowable' objects
+    elements = []
+    
+    # Get styles
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    styles.add(ParagraphStyle(
+        name='Header',
+        parent=styles['Heading1'],
+        fontSize=14,
+        alignment=1,  # Center alignment
+        textColor=colors.black,
+        spaceAfter=6
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='SubHeader',
+        parent=styles['Heading1'],
+        fontSize=18,
+        alignment=1,  # Center alignment
+        textColor=colors.black,
+        spaceAfter=12,
+        spaceBefore=6
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='SectionTitle',
+        parent=styles['Heading2'],
+        fontSize=10,
+        alignment=1,  # Center alignment
+        textColor=colors.black,
+        spaceBefore=0,
+        spaceAfter=0
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='NormalText',
+        parent=styles['Normal'],
+        fontSize=10,
+        spaceAfter=6
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='BoldText',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='SmallText',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.grey
+    ))
+    
+    # Report title based on type
+    if report_type == "patient":
+        report_title = "PATIENT MEDICAL REPORT"
+    else:  # analysis
+        report_title = "EEG ANALYSIS REPORT" 
+    
+    # Add the report title centered on the page
+    elements.append(Paragraph(report_title, styles['SubHeader']))
+    
+    # Get doctor information from the user object
+    doctor_name = "Unknown Doctor"
+    doctor_id = "N/A"
+    doctor_contact = "N/A"
+    
+    if user and isinstance(user, dict):
+        # Extract doctor details based on the actual user structure
+        doctor_name = f"{user.get('name', '')} {user.get('lastname', '')}"
+        doctor_id = user.get('username', 'N/A')
+        
+        # Extract contact info (which is nested in contact_info)
+        contact_info = user.get('contact_info', {})
+        if isinstance(contact_info, dict):
+            doctor_contact = contact_info.get('email', 'N/A')
+        else:
+            doctor_contact = "N/A"
+    
+    # Add advisory note
+    advisory_text = """Please be advised that this report is generated to aid in the diagnosis and treatment of the patient.
+    It contains AI-assisted analysis of EEG data. This report may be reviewed by a physician or medical specialist, 
+    who may request additional medical information. This information is confidential."""
+    
+    advisory_table_data = [
+        [Paragraph(advisory_text, styles['SmallText'])]
+    ]
+    
+    advisory_table = Table(advisory_table_data, colWidths=[7*inch])
+    advisory_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('PADDING', (0, 0), (-1, -1), 8),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
+    ]))
+    
+    elements.append(advisory_table)
+    elements.append(Spacer(1, 0.1*inch))
+    
+    # Add report metadata
+    report_date = datetime.now().strftime('%B %d, %Y, %I:%M %p')
+    metadata_data = [
+        ["Report Generated By:", doctor_name, "Date:", report_date],
+        ["Doctor ID:", doctor_id, "Contact:", doctor_contact]
+    ]
+    
+    metadata_table = Table(metadata_data, colWidths=[1.2*inch, 2.3*inch, 1*inch, 2.5*inch])
+    metadata_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONT', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(metadata_table)
+    elements.append(Spacer(1, 0.15*inch))
+    
+    # SECTION: Patient Information
+    section_title_data = [
+        [Paragraph("PATIENT INFORMATION", styles['SectionTitle'])]
+    ]
+    
+    section_title = Table(section_title_data, colWidths=[7*inch])
+    section_title.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(section_title)
+    
+    patient_name = f"{patient.get('firstName', '')} {patient.get('lastName', '')}"
+    patient_id = patient.get('patientId', 'N/A')
+    
+    # Patient info in a clear table format
+    patient_data = [
+        ["Patient Name:", patient_name, "Patient ID:", patient_id],
+        ["Gender:", patient.get('gender', 'N/A'), "Date of Birth:", format_date(patient.get('dateOfBirth', 'N/A'))],
+        ["Age:", calculate_age(patient.get('dateOfBirth', None)), "Contact:", patient.get('phoneNumber', 'N/A')]
+    ]
+    
+    patient_table = Table(patient_data, colWidths=[1.2*inch, 2.3*inch, 1*inch, 2.5*inch])
+    patient_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.lightgrey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONT', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(patient_table)
+    elements.append(Spacer(1, 0.15*inch))
+    
+    # SECTION: Analysis Information
+    section_title_data = [
+        [Paragraph("ANALYSIS INFORMATION", styles['SectionTitle'])]
+    ]
+    
+    section_title = Table(section_title_data, colWidths=[7*inch])
+    section_title.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(section_title)
+    
+    analysis_status = analysis.get('status', 'N/A')
+    result = analysis.get('result', {})
+    prediction_class = result.get('class', None)
+    probability = result.get('probability', None)
+    
+    if prediction_class is not None and prediction_class == 1:
+        classification = "Normal"
+        technical_class = "Non-focal"
+    elif prediction_class is not None and prediction_class == 0:
+        classification = "Abnormal"
+        technical_class = "Focal"
+    else:
+        classification = "N/A"
+        technical_class = "N/A"
+    
+    if probability is not None:
+        confidence = f"{probability * 100:.1f}%"
+    else:
+        confidence = "N/A"
+    
+    # Analysis info table
+    analysis_data = [
+        ["Analysis Date:", format_date(analysis.get('uploadDate', 'N/A')), "File Name:", analysis.get('fileName', 'N/A')],
+        ["Model Used:", analysis.get('modelUsed', 'N/A'), "Status:", analysis_status.capitalize() if isinstance(analysis_status, str) else "N/A"],
+        ["Clinical Classification:", classification, "Technical Classification:", technical_class],
+        ["Confidence:", confidence, "", ""]
+    ]
+    
+    analysis_table = Table(analysis_data, colWidths=[1.5*inch, 2*inch, 1.5*inch, 2*inch])
+    analysis_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.lightgrey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONT', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('PADDING', (0, 0), (-1, -1), 4),
+        ('SPAN', (1, 3), (3, 3)),
+    ]))
+    
+    elements.append(analysis_table)
+    elements.append(Spacer(1, 0.15*inch))
+    
+    # Add clinical interpretation if available
+    if result.get('interpretation'):
+        section_title_data = [
+            [Paragraph("CLINICAL INTERPRETATION", styles['SectionTitle'])]
+        ]
+        
+        section_title = Table(section_title_data, colWidths=[7*inch])
+        section_title.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(section_title)
+        
+        interpretation = result.get('interpretation', 'No interpretation available.')
+        interpretation_data = [
+            [Paragraph(interpretation, styles['NormalText'])]
+        ]
+        
+        interpretation_table = Table(interpretation_data, colWidths=[7*inch])
+        interpretation_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        
+        elements.append(interpretation_table)
+        elements.append(Spacer(1, 0.15*inch))
+    
+    # Add doctor notes if available
+    if analysis.get('notes'):
+        section_title_data = [
+            [Paragraph("DOCTOR'S NOTES", styles['SectionTitle'])]
+        ]
+        
+        section_title = Table(section_title_data, colWidths=[7*inch])
+        section_title.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(section_title)
+        
+        notes_data = [
+            [Paragraph(analysis.get('notes', ''), styles['NormalText'])]
+        ]
+        
+        notes_table = Table(notes_data, colWidths=[7*inch])
+        notes_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        
+        elements.append(notes_table)
+        elements.append(Spacer(1, 0.15*inch))
+    
+    # Add technical details for detailed report
+    if actual_report_type == "detailed":
+        section_title_data = [
+            [Paragraph("TECHNICAL DETAILS", styles['SectionTitle'])]
+        ]
+        
+        section_title = Table(section_title_data, colWidths=[7*inch])
+        section_title.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(section_title)
+        
+        # Signal information
+        signal_info = "EEG signal data was processed using advanced signal processing techniques. The analysis focused on key features including frequency bands, temporal patterns, and spatial distribution of electrical activity. For detailed visualization of the EEG signal, please refer to the analysis interface in the application where interactive charts are available."
+        
+        signal_data = [
+            [Paragraph(signal_info, styles['NormalText'])]
+        ]
+        
+        signal_table = Table(signal_data, colWidths=[7*inch])
+        signal_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        
+        elements.append(signal_table)
+        elements.append(Spacer(1, 0.15*inch))
+        
+        # Include processing times if available
+        processing_start = analysis.get('processingStartTime')
+        processing_end = analysis.get('processingEndTime')
+        
+        if processing_start and processing_end:
+            start_time = datetime.fromisoformat(processing_start) if isinstance(processing_start, str) else processing_start
+            end_time = datetime.fromisoformat(processing_end) if isinstance(processing_end, str) else processing_end
+            
+            processing_time = (end_time - start_time).total_seconds()
+            processing_info = f"Processing Time: {processing_time:.1f} seconds"
+            
+            metrics_data = [
+                [Paragraph(processing_info, styles['NormalText'])]
+            ]
+            
+            metrics_table = Table(metrics_data, colWidths=[7*inch])
+            metrics_table.setStyle(TableStyle([
+                ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('PADDING', (0, 0), (-1, -1), 6),
+            ]))
+            
+            elements.append(metrics_table)
+            elements.append(Spacer(1, 0.15*inch))
+        
+        # Add model metrics if available
+        if result and "metrics" in result:
+            metrics = result["metrics"]
+            
+            # Create metrics table
+            metrics_title_data = [
+                [Paragraph("MODEL PERFORMANCE METRICS", styles['BoldText'])]
+            ]
+            
+            metrics_title = Table(metrics_title_data, colWidths=[7*inch])
+            metrics_title.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('PADDING', (0, 0), (-1, -1), 4),
+            ]))
+            
+            elements.append(metrics_title)
+            
+            metrics_rows = []
+            if metrics.get('accuracy') is not None:
+                metrics_rows.append(["Accuracy:", f"{metrics['accuracy'] * 100:.1f}%"])
+            if metrics.get('precision') is not None:
+                metrics_rows.append(["Precision:", f"{metrics['precision'] * 100:.1f}%"])
+            if metrics.get('recall') is not None:
+                metrics_rows.append(["Recall:", f"{metrics['recall'] * 100:.1f}%"])
+            if metrics.get('specificity') is not None:
+                metrics_rows.append(["Specificity:", f"{metrics['specificity'] * 100:.1f}%"])
+            
+            if metrics_rows:
+                # Split into two columns
+                left_metrics = metrics_rows[:2] if len(metrics_rows) > 1 else metrics_rows
+                right_metrics = metrics_rows[2:] if len(metrics_rows) > 2 else []
+                
+                # Fill right side if needed
+                while len(left_metrics) > len(right_metrics):
+                    right_metrics.append(["", ""])
+                
+                # Create a combined table
+                combined_metrics = []
+                for i in range(len(left_metrics)):
+                    row = left_metrics[i] + right_metrics[i]
+                    combined_metrics.append(row)
+                
+                metrics_table = Table(combined_metrics, colWidths=[1.5*inch, 2*inch, 1.5*inch, 2*inch])
+                metrics_table.setStyle(TableStyle([
+                    ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.lightgrey),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+                    ('FONT', (2, 0), (2, -1), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('PADDING', (0, 0), (-1, -1), 4),
+                ]))
+                
+                elements.append(metrics_table)
+                elements.append(Spacer(1, 0.15*inch))
+    
+    # Certification and Signatures section
+    section_title_data = [
+        [Paragraph("CERTIFICATION", styles['SectionTitle'])]
+    ]
+    
+    section_title = Table(section_title_data, colWidths=[7*inch])
+    section_title.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(section_title)
+    
+    certification_text = f"I, {doctor_name}, certify that I have reviewed this analysis report. This report was generated using AI-assisted analysis of EEG data and is intended to support clinical decision making."
+    
+    certification_data = [
+        [Paragraph(certification_text, styles['NormalText'])]
+    ]
+    
+    certification_table = Table(certification_data, colWidths=[7*inch])
+    certification_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('PADDING', (0, 0), (-1, -1), 6),
+    ]))
+    
+    elements.append(certification_table)
+    
+    # Signature fields
+    signature_data = [
+        ["Doctor's Signature:", "", "Date:", ""],
+    ]
+    
+    signature_table = Table(signature_data, colWidths=[1.5*inch, 2*inch, 1*inch, 2.5*inch])
+    signature_table.setStyle(TableStyle([
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONT', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('PADDING', (0, 0), (-1, -1), 6),
+        ('LINEBELOW', (1, 0), (1, 0), 0.5, border_color),
+        ('LINEBELOW', (3, 0), (3, 0), 0.5, border_color),
+    ]))
+    
+    elements.append(signature_table)
+    elements.append(Spacer(1, 0.25*inch))
+    
+    # Add disclaimer
+    disclaimer_text = """DISCLAIMER: This report is generated by an automated system. The analysis results are intended to assist healthcare professionals and should not be used as the sole basis for clinical decisions. Results should be interpreted in conjunction with clinical findings and medical history."""
+    
+    disclaimer_data = [
+        [Paragraph(disclaimer_text, styles['SmallText'])]
+    ]
+    
+    disclaimer_table = Table(disclaimer_data, colWidths=[7*inch])
+    disclaimer_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(disclaimer_table)
+    
+    # Build the PDF document
+    doc.build(elements)
+    
+    return output_path
+
+def format_date(date_value):
+    """Format a date value for display in the report"""
+    if not date_value or date_value == 'N/A':
+        return 'N/A'
+    
+    try:
+        if isinstance(date_value, str):
+            date_obj = datetime.fromisoformat(date_value.replace('Z', '+00:00'))
+        else:
+            date_obj = date_value
+            
+        return date_obj.strftime('%B %d, %Y')
+    except:
+        return str(date_value)
+
+def calculate_age(dob):
+    """Calculate age from date of birth"""
+    if not dob:
+        return 'N/A'
+    
+    try:
+        if isinstance(dob, str):
+            birth_date = datetime.fromisoformat(dob.replace('Z', '+00:00'))
+        else:
+            birth_date = dob
+            
+        today = datetime.now()
+        age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        return f"{age} years"
+    except:
+        return 'N/A'
+
+def generate_patient_pdf_report(patient, analyses, output_path, user=None):
+    """
+    Generate a comprehensive patient PDF report focused on patient information and analysis history
+    
+    Args:
+        patient: MongoDB patient document
+        analyses: List of analyses for this patient (ordered by date, most recent first)
+        output_path: Where to save the PDF file
+        user: User generating the report
+        
+    Returns:
+        Path to the generated report
+    """
+    # Create a PDF document
+    doc = SimpleDocTemplate(
+        output_path,
+        pagesize=letter,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+    
+    # Define colors
+    header_color = colors.Color(0.2, 0.6, 0.6)  # Teal color for header
+    section_bg_color = colors.Color(0.9, 0.9, 0.9)  # Light gray for section backgrounds
+    border_color = colors.black
+    
+    # Container for the 'Flowable' objects
+    elements = []
+    
+    # Get styles
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    styles.add(ParagraphStyle(
+        name='Header',
+        parent=styles['Heading1'],
+        fontSize=14,
+        alignment=1,  # Center alignment
+        textColor=colors.black,
+        spaceAfter=6
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='SubHeader',
+        parent=styles['Heading1'],
+        fontSize=18,
+        alignment=1,  # Center alignment
+        textColor=colors.black,
+        spaceAfter=12,
+        spaceBefore=6
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='SectionTitle',
+        parent=styles['Heading2'],
+        fontSize=10,
+        alignment=1,  # Center alignment
+        textColor=colors.black,
+        spaceBefore=0,
+        spaceAfter=0
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='NormalText',
+        parent=styles['Normal'],
+        fontSize=10,
+        spaceAfter=6
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='BoldText',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='SmallText',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.grey
+    ))
+    
+    # Report title
+    report_title = "COMPREHENSIVE PATIENT MEDICAL REPORT"
+    
+    # Add the report title centered on the page
+    elements.append(Paragraph(report_title, styles['SubHeader']))
+    
+    # Get doctor information from the user object
+    doctor_name = "Unknown Doctor"
+    doctor_id = "N/A"
+    doctor_contact = "N/A"
+    
+    if user and isinstance(user, dict):
+        # Extract doctor details based on the actual user structure
+        doctor_name = f"{user.get('name', '')} {user.get('lastname', '')}"
+        doctor_id = user.get('username', 'N/A')
+        
+        # Extract contact info (which is nested in contact_info)
+        contact_info = user.get('contact_info', {})
+        if isinstance(contact_info, dict):
+            doctor_contact = contact_info.get('email', 'N/A')
+        else:
+            doctor_contact = "N/A"
+    
+    # Add advisory note
+    advisory_text = """Please be advised that this report is generated to provide a comprehensive overview of the patient's medical information and EEG analysis history.
+    It contains AI-assisted analysis of EEG data. This report is intended to be reviewed by a qualified medical professional, who may request additional information.
+    The information contained in this report is confidential and protected by applicable healthcare privacy laws."""
+    
+    advisory_table_data = [
+        [Paragraph(advisory_text, styles['SmallText'])]
+    ]
+    
+    advisory_table = Table(advisory_table_data, colWidths=[7*inch])
+    advisory_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('PADDING', (0, 0), (-1, -1), 8),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
+    ]))
+    
+    elements.append(advisory_table)
+    elements.append(Spacer(1, 0.1*inch))
+    
+    # Add report metadata
+    report_date = datetime.now().strftime('%B %d, %Y, %I:%M %p')
+    metadata_data = [
+        ["Report Generated By:", doctor_name, "Date:", report_date],
+        ["Doctor ID:", doctor_id, "Contact:", doctor_contact]
+    ]
+    
+    metadata_table = Table(metadata_data, colWidths=[1.2*inch, 2.3*inch, 1*inch, 2.5*inch])
+    metadata_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONT', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(metadata_table)
+    elements.append(Spacer(1, 0.15*inch))
+    
+    # SECTION: Patient Information
+    section_title_data = [
+        [Paragraph("PATIENT INFORMATION", styles['SectionTitle'])]
+    ]
+    
+    section_title = Table(section_title_data, colWidths=[7*inch])
+    section_title.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(section_title)
+    
+    patient_name = f"{patient.get('firstName', '')} {patient.get('lastName', '')}"
+    patient_id = patient.get('patientId', 'N/A')
+    
+    # Patient info in a clear table format
+    patient_data = [
+        ["Patient Name:", patient_name, "Patient ID:", patient_id],
+        ["Gender:", patient.get('gender', 'N/A'), "Date of Birth:", format_date(patient.get('dateOfBirth', 'N/A'))],
+        ["Age:", calculate_age(patient.get('dateOfBirth', None)), "Created Date:", format_date(patient.get('createdAt', 'N/A'))]
+    ]
+    
+    # Add contact information if available
+    contact_info = patient.get('contactInfo', {})
+    if isinstance(contact_info, dict):
+        patient_data.append([
+            "Phone:", contact_info.get('phone', 'N/A'), 
+            "Email:", contact_info.get('email', 'N/A')
+        ])
+        
+        # Add address separately for better formatting
+        if contact_info.get('address'):
+            patient_data.append([
+                "Address:", contact_info.get('address', 'N/A'), 
+                "", ""
+            ])
+    
+    patient_table = Table(patient_data, colWidths=[1.2*inch, 2.3*inch, 1*inch, 2.5*inch])
+    patient_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.lightgrey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONT', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('PADDING', (0, 0), (-1, -1), 4),
+        # Span address across multiple columns if needed
+        ('SPAN', (1, -1), (3, -1)) if len(patient_data) > 3 and patient_data[-1][0] == "Address:" else None,
+    ]))
+    
+    elements.append(patient_table)
+    elements.append(Spacer(1, 0.15*inch))
+    
+    # SECTION: Medical History
+    if patient.get('medicalHistory'):
+        section_title_data = [
+            [Paragraph("MEDICAL HISTORY", styles['SectionTitle'])]
+        ]
+        
+        section_title = Table(section_title_data, colWidths=[7*inch])
+        section_title.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(section_title)
+        
+        medical_history = patient.get('medicalHistory', 'No medical history available.')
+        medical_history_data = [
+            [Paragraph(medical_history, styles['NormalText'])]
+        ]
+        
+        medical_history_table = Table(medical_history_data, colWidths=[7*inch])
+        medical_history_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        
+        elements.append(medical_history_table)
+        elements.append(Spacer(1, 0.15*inch))
+    
+    # SECTION: Current Medications
+    medications = patient.get('medications', [])
+    if medications and len(medications) > 0:
+        section_title_data = [
+            [Paragraph("CURRENT MEDICATIONS", styles['SectionTitle'])]
+        ]
+        
+        section_title = Table(section_title_data, colWidths=[7*inch])
+        section_title.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(section_title)
+        
+        # Create headers
+        med_data = [["Medication", "Dosage", "Frequency"]]
+        
+        # Add each medication
+        for med in medications:
+            med_data.append([
+                med.get('name', 'N/A'),
+                med.get('dosage', 'N/A'),
+                med.get('frequency', 'N/A')
+            ])
+        
+        medications_table = Table(med_data, colWidths=[3*inch, 2*inch, 2*inch])
+        medications_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.lightgrey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (2, 0), section_bg_color),
+            ('FONT', (0, 0), (2, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(medications_table)
+        elements.append(Spacer(1, 0.15*inch))
+    
+    # SECTION: Clinical Notes
+    if patient.get('notes'):
+        section_title_data = [
+            [Paragraph("CLINICAL NOTES", styles['SectionTitle'])]
+        ]
+        
+        section_title = Table(section_title_data, colWidths=[7*inch])
+        section_title.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(section_title)
+        
+        notes = patient.get('notes', 'No clinical notes available.')
+        notes_data = [
+            [Paragraph(notes, styles['NormalText'])]
+        ]
+        
+        notes_table = Table(notes_data, colWidths=[7*inch])
+        notes_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        
+        elements.append(notes_table)
+        elements.append(Spacer(1, 0.15*inch))
+    
+    # SECTION: Analysis Summary
+    if analyses and len(analyses) > 0:
+        section_title_data = [
+            [Paragraph("EEG ANALYSIS SUMMARY", styles['SectionTitle'])]
+        ]
+        
+        section_title = Table(section_title_data, colWidths=[7*inch])
+        section_title.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(section_title)
+        
+        # Summary statistics
+        completed_analyses = [a for a in analyses if a.get('status') == 'completed']
+        abnormal_analyses = [a for a in completed_analyses if a.get('result', {}).get('class') == 0]
+        normal_analyses = [a for a in completed_analyses if a.get('result', {}).get('class') == 1]
+        
+        total_analyses = len(analyses)
+        completed_count = len(completed_analyses)
+        abnormal_count = len(abnormal_analyses)
+        normal_count = len(normal_analyses)
+        pending_count = total_analyses - completed_count
+        
+        # Most recent analysis date
+        most_recent_date = "N/A"
+        if completed_analyses:
+            most_recent = max(completed_analyses, key=lambda a: a.get('uploadDate', ''))
+            most_recent_date = format_date(most_recent.get('uploadDate', 'N/A'))
+        
+        # Analysis summary stats
+        summary_data = [
+            ["Total Analyses:", str(total_analyses), "Latest Analysis Date:", most_recent_date],
+            ["Completed:", str(completed_count), "Pending/Failed:", str(pending_count)],
+            ["Normal Results:", str(normal_count), "Abnormal Results:", str(abnormal_count)]
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[1.5*inch, 2*inch, 1.5*inch, 2*inch])
+        summary_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.lightgrey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONT', (2, 0), (2, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(summary_table)
+        elements.append(Spacer(1, 0.15*inch))
+        
+        # Recent Analysis Results
+        if completed_analyses:
+            section_title_data = [
+                [Paragraph("RECENT ANALYSIS RESULTS", styles['SectionTitle'])]
+            ]
+            
+            section_title = Table(section_title_data, colWidths=[7*inch])
+            section_title.setStyle(TableStyle([
+                ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+                ('PADDING', (0, 0), (-1, -1), 4),
+            ]))
+            
+            elements.append(section_title)
+            
+            # Table headers
+            analysis_results_data = [["Date", "Result", "Confidence", "Model"]]
+            
+            # Show only the 5 most recent analyses
+            recent_analyses = sorted(
+                completed_analyses, 
+                key=lambda a: a.get('uploadDate', ''), 
+                reverse=True
+            )[:5]
+            
+            for analysis in recent_analyses:
+                result = analysis.get('result', {})
+                prediction_class = result.get('class', None)
+                probability = result.get('probability', None)
+                
+                if prediction_class is not None and prediction_class == 1:
+                    classification = "Normal"
+                elif prediction_class is not None and prediction_class == 0:
+                    classification = "Abnormal"
+                else:
+                    classification = "N/A"
+                
+                if probability is not None:
+                    confidence = f"{probability * 100:.1f}%"
+                else:
+                    confidence = "N/A"
+                
+                analysis_results_data.append([
+                    format_date(analysis.get('uploadDate', 'N/A')),
+                    classification,
+                    confidence,
+                    analysis.get('modelUsed', 'N/A')
+                ])
+            
+            analysis_results_table = Table(analysis_results_data, colWidths=[1.5*inch, 1.5*inch, 1.5*inch, 2.5*inch])
+            analysis_results_table.setStyle(TableStyle([
+                ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.lightgrey),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BACKGROUND', (0, 0), (3, 0), section_bg_color),
+                ('FONT', (0, 0), (3, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('PADDING', (0, 0), (-1, -1), 4),
+                # Color the results
+                *[('TEXTCOLOR', (1, i), (1, i), colors.red if row[1] == "Abnormal" else colors.green) 
+                  for i, row in enumerate(analysis_results_data) if i > 0]
+            ]))
+            
+            elements.append(analysis_results_table)
+            elements.append(Spacer(1, 0.15*inch))
+    
+    # Certification and Signatures section
+    section_title_data = [
+        [Paragraph("CERTIFICATION", styles['SectionTitle'])]
+    ]
+    
+    section_title = Table(section_title_data, colWidths=[7*inch])
+    section_title.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, -1), section_bg_color),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(section_title)
+    
+    certification_text = f"I, {doctor_name}, certify that I have reviewed this patient report. This report includes AI-assisted analysis of EEG data and is intended to support clinical decision making. The information is accurate to the best of my knowledge."
+    
+    certification_data = [
+        [Paragraph(certification_text, styles['NormalText'])]
+    ]
+    
+    certification_table = Table(certification_data, colWidths=[7*inch])
+    certification_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, border_color),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('PADDING', (0, 0), (-1, -1), 6),
+    ]))
+    
+    elements.append(certification_table)
+    
+    # Signature fields
+    signature_data = [
+        ["Doctor's Signature:", "", "Date:", ""],
+    ]
+    
+    signature_table = Table(signature_data, colWidths=[1.5*inch, 2*inch, 1*inch, 2.5*inch])
+    signature_table.setStyle(TableStyle([
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONT', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('PADDING', (0, 0), (-1, -1), 6),
+        ('LINEBELOW', (1, 0), (1, 0), 0.5, border_color),
+        ('LINEBELOW', (3, 0), (3, 0), 0.5, border_color),
+    ]))
+    
+    elements.append(signature_table)
+    elements.append(Spacer(1, 0.25*inch))
+    
+    # Add disclaimer
+    disclaimer_text = """DISCLAIMER: This report is generated by an automated system. The analysis results are intended to assist healthcare professionals and should not be used as the sole basis for clinical decisions. Results should be interpreted in conjunction with clinical findings and medical history."""
+    
+    disclaimer_data = [
+        [Paragraph(disclaimer_text, styles['SmallText'])]
+    ]
+    
+    disclaimer_table = Table(disclaimer_data, colWidths=[7*inch])
+    disclaimer_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('PADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(disclaimer_table)
+    
+    # Build the PDF document
+    doc.build(elements)
+    
+    return output_path 
