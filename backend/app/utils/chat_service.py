@@ -17,9 +17,6 @@ logger = logging.getLogger(__name__)
 dotenv_path = pathlib.Path(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))).joinpath('.env')
 load_dotenv(dotenv_path=dotenv_path)
 
-# OpenRouter API key from envcopy.txt as a fallback
-FALLBACK_API_KEY = "REPLACE_WITH_OPENROUTER_API_KEY"
-
 # Custom JSON encoder to handle MongoDB types
 class MongoJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -37,10 +34,8 @@ class ChatService:
     def __init__(self):
         """Initialize the chat service"""
         self.api_key = os.getenv('OPENROUTER_API_KEY')
-        # Use fallback if not found in environment
         if not self.api_key:
-            logger.info("OpenRouter API key not found in environment, using fallback key")
-            self.api_key = FALLBACK_API_KEY
+            logger.warning("OPENROUTER_API_KEY not set in environment; chatbot completions disabled until configured.")
         else:
             logger.info("OpenRouter API key loaded from environment variables")
             

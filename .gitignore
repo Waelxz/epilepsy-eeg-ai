@@ -1,0 +1,39 @@
+# Environments & secrets
+.env
+.env.*
+!.env.example
+envcopy.txt
+*.pem
+*.key
+client_secret*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Node / Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+npm-debug.log*
+
+# Logs & runtime uploads
+logs/
+*.log
+backend/logs/
+backend/uploads/
+uploads/
+
+# RAG local PDFs & generated vector index
+backend/rag/*.pdf
+backend/rag/faiss_index/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
